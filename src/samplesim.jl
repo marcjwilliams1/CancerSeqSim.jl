@@ -353,6 +353,7 @@ function getallmetrics(inandout)
   pctfit = join(simresult.pctfit, ","),
   clonetime = join(simresult.clonetime, ","),
   clonemuts = join(simresult.clonemuts, ","),
+  clonetype = join(simresult.clonetype, ","),
   br = join(simresult.birthrates, ","),
   dr = join(simresult.deathrates, ","),
   mu = simresult.μ,

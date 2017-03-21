@@ -37,6 +37,7 @@ type SimResult
     tend::Float64
     VAF::Array{Float64,1}
     cloneN::Array{Int64, 1}
+    clonetype::Array{Int64, 1}
 
 end
 
@@ -295,7 +296,7 @@ function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmuts = 100, nc 
 
     M,fitness = cellsconvert(sresult.cells)
 
-    return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.clonemuts, sresult.birthrates, sresult.deathrates, sresult.cloneN
+    return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.clonemuts, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype
 
 end
 
@@ -323,7 +324,7 @@ end
 
 function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesize)
 
-    M, fitness, tend, clonetime, clonemuts, br, dr, cloneN = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmuts = IP.clonalmuts, nc = IP.numclones)
+    M, fitness, tend, clonetime, clonemuts, br, dr, cloneN, clonetype = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmuts = IP.clonalmuts, nc = IP.numclones)
 
     if length(clonetime)!= IP.numclones
 
@@ -332,6 +333,7 @@ function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesi
         IP.selection = IP.selection[1:IP.numclones]
         br = br[1:IP.numclones]
         dr = dr[1:IP.numclones]
+        clonetype = clonetype[1:IP.numclones]
 
     end
 
@@ -352,6 +354,7 @@ function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesi
         IP.numclones = sum(detectableclones)
         IP.tevent = IP.tevent[detectableclones]
         IP.selection = IP.selection[detectableclones]
+        clonetype = clonetype[detectableclones]
         unshift!(detectableclones, true)
         detectableclones = detectableclones[1:length(br)]
         br = br[detectableclones]
@@ -366,7 +369,7 @@ function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesi
     end
 
     #return SimResults object
-    return SimResult(IP.Nmax, IP.numclones, IP.tevent, IP.selection, pctfit, clonetime, cmuts, br, dr, IP.μ, IP.b, IP.d, IP.clonalmuts, tend, AF, cloneN), IP
+    return SimResult(IP.Nmax, IP.numclones, IP.tevent, IP.selection, pctfit, clonetime, cmuts, br, dr, IP.μ, IP.b, IP.d, IP.clonalmuts, tend, AF, cloneN, clonetype), IP
 
 end
 

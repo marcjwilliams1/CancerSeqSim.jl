@@ -26,18 +26,17 @@ function vafhistogram(sresult; annotateclones = false)
 
     DF = sresult.sampleddata.DF
 
-    if annotateclones == true & sresult.input.numclones > 0
+    if (annotateclones == true) & (sresult.input.numclones > 0)
 
       xint = sresult.input.pctfit./2
-      xint = push!(xint, 0.5)
-      println(xint)
+      push!(xint, sum(xint))
 
       p1 = plot(DF, x="VAF", y="freq",
       Guide.xlabel("Allelic Frequency f"),
       Guide.ylabel("Number of Mutations"),
       xintercept = xint,
-      Geom.vline(color=colorant"orange", size=2mm),
-      Geom.bar, 
+      Geom.vline(color=colorant"red"),
+      Geom.bar,
       Guide.xticks(ticks = collect(0.0:0.2:1.0)),
       Theme(major_label_font_size = 12pt,
       major_label_font = "Arial",
