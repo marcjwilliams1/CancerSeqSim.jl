@@ -226,7 +226,7 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
-function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
+function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
@@ -238,7 +238,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
     ploidy,
     read_depth,
     fmin,
-    0.3,
+    fmax,
     clonalmuts,
     s,
     μ,
@@ -264,7 +264,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
 end
 
 
-function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3)
+function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3)
 
     correctnc = false
 
@@ -285,7 +285,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       ploidy,
       read_depth,
       fmin,
-      0.3,
+      fmax,
       clonalmuts,
       s,
       μ,
