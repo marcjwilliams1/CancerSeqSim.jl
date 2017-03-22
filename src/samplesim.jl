@@ -275,8 +275,6 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       tevent = sort(rand(Uniform(1.0, 20.0), nclones))
       s = rand(Uniform(0.0, 25.0), nclones)
 
-      fmin = det_limit + 0.05
-
       simname = "clone$(nclones).rd.$(read_depth).rho.$(ρ).mu.$(Int64(μ)).cm.$(clonalmuts).d.$(d)"
 
       IP = InputParameters(nclones,
