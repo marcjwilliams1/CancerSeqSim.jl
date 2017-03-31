@@ -1,4 +1,4 @@
-module TumourVAFSimulation
+module CancerSeqSim
 
 
 using Distributions

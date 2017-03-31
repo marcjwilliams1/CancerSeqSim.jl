@@ -1,6 +1,4 @@
-Simulate tumour VAFs with different clonal structures.
-
-# TumourVAFSimulation
+# CancerSeqSim
 
 Simulate tumour VAFs with different clonal structures.
 
