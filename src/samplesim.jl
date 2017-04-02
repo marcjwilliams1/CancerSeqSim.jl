@@ -51,9 +51,12 @@ end
 ###############################################################################
 
 
-function sampledhist(AF, cellnum ; det_limit = 0.1, ploidy = 2.0, read_depth = 100.0)
+function sampledhist(AF, cellnum ; det_limit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
+    
+    AF = AF .* cellularity
+
     filter!(x -> x > det_limit * cellnum, AF)
 
     samp_percent = read_depth/cellnum
@@ -83,9 +86,11 @@ function betabinom(p, n, ρ)
 
 end
 
-function sampledhist(AF, cellnum, ρ ; det_limit = 0.1, ploidy = 2.0, read_depth = 100.0)
+function sampledhist(AF, cellnum, ρ ; det_limit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
+
+    AF = AF .* cellularity
 
     filter!(x -> x > det_limit * cellnum, AF)
 
@@ -226,7 +231,7 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
-function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
+function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
@@ -245,16 +250,17 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
     b,
     d,
     tevent,
-    ρ)
+    ρ,
+    cellularity)
 
     #get simulation data
     simresult, IP = run1simulation(10, IP, 0.0, 1.0)
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth)
+        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth)
+        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     #get cumulativedistributions
@@ -302,9 +308,9 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth)
+        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth)
+        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, ellularity = IP.cellularity)
     end
 
     #get cumulativedistributions
@@ -331,7 +337,7 @@ function getallmetrics(inandout)
   AD = inandout.output
   IP = inandout.parameters
 
-  sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth)
+  sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
 
   #get cumulativedistributions
   AD = cumulativedist(sampleddata.VAF, fmin = IP.fmin, fmax = IP.fmax)

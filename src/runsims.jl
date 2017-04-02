@@ -56,6 +56,7 @@ type InputParameters
     d::Float64
     tevent::Array{Float64,1}
     ρ::Float64
+    cellularity::Float64
 end
 
 ###############################################################################
