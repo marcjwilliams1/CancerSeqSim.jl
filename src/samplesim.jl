@@ -54,7 +54,7 @@ end
 function sampledhist(AF, cellnum ; det_limit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-    
+
     AF = AF .* cellularity
 
     filter!(x -> x > det_limit * cellnum, AF)
@@ -270,7 +270,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
 end
 
 
-function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3)
+function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0)
 
     correctnc = false
 
@@ -296,7 +296,8 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       b,
       d,
       tevent,
-      ρ)
+      ρ,
+      cellularity)
 
       simresult, IP = run1simulation(10, IP, minclonesize, maxclonesize)
 
@@ -310,7 +311,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
     if IP.ρ > 0.0
         sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, ellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     #get cumulativedistributions
@@ -337,7 +338,7 @@ function getallmetrics(inandout)
   AD = inandout.output
   IP = inandout.parameters
 
-  sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+  sampleddata = inandout.sampleddata
 
   #get cumulativedistributions
   AD = cumulativedist(sampleddata.VAF, fmin = IP.fmin, fmax = IP.fmax)
