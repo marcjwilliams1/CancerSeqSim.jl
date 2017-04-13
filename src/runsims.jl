@@ -81,7 +81,7 @@ function newmutations(cancercell, μ, mutID)
     cancercell.mutationsB = append!(cancercell.mutationsB,mutID:mutID+numbermutationsB-1)
     mutID = mutID + numbermutationsB
 
-    return cancercell,mutID
+    return cancercell, mutID
 end
 
 function newmutationsinit(cancercell, μ, mutID)
@@ -301,7 +301,7 @@ function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmuts = 100, nc 
 
 end
 
-function allelefreqexpand(AFDict, μ, clonemuts)
+function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
 
   #expand allele frequency given mutation rate and calculate number of mutations in the subclones
 
@@ -310,7 +310,13 @@ function allelefreqexpand(AFDict, μ, clonemuts)
     mutfreqs = collect(values(AFDict))
     mutids = collect(keys(AFDict))
     for f in 1:length(mutfreqs)
-        x = rand(Poisson(μ))
+      
+        if fixedmu = false
+          x = rand(Poisson(μ))
+        else
+          x = μ
+        end
+
         append!(AFnew, ones(x) * mutfreqs[f])
         for i in 1:length(cmuts)
             if mutids[f] in clonemuts[i]
