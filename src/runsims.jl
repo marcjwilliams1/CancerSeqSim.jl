@@ -57,6 +57,7 @@ type InputParameters
     tevent::Array{Float64,1}
     ρ::Float64
     cellularity::Float64
+    fixedmu::Bool
 end
 
 ###############################################################################
@@ -304,20 +305,39 @@ end
 function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
 
   #expand allele frequency given mutation rate and calculate number of mutations in the subclones
+    if fixedmu == false
 
+      AFnew = Int64[]
+      cmuts = zeros(Int64, length(clonemuts))
+      mutfreqs = collect(values(AFDict))
+      mutids = collect(keys(AFDict))
+
+      for f in 1:length(mutfreqs)
+
+          x = rand(Poisson(μ))
+
+          append!(AFnew, ones(x) * mutfreqs[f])
+
+          for i in 1:length(cmuts)
+              if mutids[f] in clonemuts[i]
+                  cmuts[i] = cmuts[i] + x
+              end
+          end
+
+      end
+    else
+  
     AFnew = Int64[]
     cmuts = zeros(Int64, length(clonemuts))
     mutfreqs = collect(values(AFDict))
     mutids = collect(keys(AFDict))
+
     for f in 1:length(mutfreqs)
-      
-        if fixedmu = false
-          x = rand(Poisson(μ))
-        else
-          x = μ
-        end
+
+        x = μ
 
         append!(AFnew, ones(x) * mutfreqs[f])
+
         for i in 1:length(cmuts)
             if mutids[f] in clonemuts[i]
                 cmuts[i] = cmuts[i] + x
@@ -325,6 +345,12 @@ function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
         end
 
     end
+
+    end
+
+
+
+
 
     return AFnew, cmuts
 end
@@ -345,7 +371,7 @@ function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesi
     end
 
     AF = allelefreq(M, IP.Nmax)
-    AF, cmuts = allelefreqexpand(AF, IP.μ, clonemuts)
+    AF, cmuts = allelefreqexpand(AF, IP.μ, clonemuts, fixedmu = IP.fixedmu)
     prepend!(AF, repeat([Float64(IP.Nmax)], inner = IP.clonalmuts))
 
     pctfit=Float64[]
