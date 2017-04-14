@@ -134,7 +134,7 @@ function initializesim(clonalmuts)
 end
 
 
-function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tevent=[0.0])
+function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tevent=[0.0], maxclonefreq = 100)
 
     #set array of birthrates
     birthrates = [b]
@@ -198,10 +198,19 @@ function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tev
 
             clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] + 1
 
+            push!(Nvec,N)
+
+            Δt =  - 1/(Rmax * Nt) * log(rand())
+
+            t = t + Δt
+
+            push!(tvec,t)
+
             #if population time is tevent, cell is mutated into fitter cell
             if t > times[fitmutant]
                 if fitmutant != numclones + 1
                     #one mutant turns into another "type" so decreases in frequency
+
                     clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] - 1
 
                     #keep track of how many clones
@@ -239,15 +248,15 @@ function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tev
             #remove deleted cell
             deleteat!(cells,randcell)
 
+            push!(Nvec,N)
+
+            Δt =  - 1/(Rmax * Nt) * log(rand())
+
+            t = t + Δt
+
+            push!(tvec,t)
+
         end
-
-        push!(Nvec,N)
-
-        Δt =  - 1/(Rmax * Nt) * log(rand())
-
-        t = t + Δt
-
-        push!(tvec,t)
 
         #every cell dies reinitialize simulation
         if (N == 0)
@@ -256,7 +265,7 @@ function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tev
             push!(muts,mutID)
         end
 
-        if (executed == false) && ((clonefreq.>100) == changemutrate)
+        if (executed == false) && ((clonefreq.>maxclonefreq) == changemutrate)
             μ = 0.0
             executed = true
         end
@@ -326,31 +335,28 @@ function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
 
       end
     else
-  
-    AFnew = Int64[]
-    cmuts = zeros(Int64, length(clonemuts))
-    mutfreqs = collect(values(AFDict))
-    mutids = collect(keys(AFDict))
 
-    for f in 1:length(mutfreqs)
+      AFnew = Int64[]
+      cmuts = zeros(Int64, length(clonemuts))
+      mutfreqs = collect(values(AFDict))
+      mutids = collect(keys(AFDict))
+      μint = round(Int64, μ)
 
-        x = μ
+      for f in 1:length(mutfreqs)
 
-        append!(AFnew, ones(x) * mutfreqs[f])
+          x = μint
 
-        for i in 1:length(cmuts)
-            if mutids[f] in clonemuts[i]
-                cmuts[i] = cmuts[i] + x
-            end
-        end
+          append!(AFnew, ones(x) * mutfreqs[f])
+
+          for i in 1:length(cmuts)
+              if mutids[f] in clonemuts[i]
+                  cmuts[i] = cmuts[i] + x
+              end
+          end
+
+      end
 
     end
-
-    end
-
-
-
-
 
     return AFnew, cmuts
 end
