@@ -172,7 +172,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
         r = rand(Uniform(0,Rmax))
 
-        #println([r, Rmax, birthrates[cells[randcell].fitness]])
+        #println([r, Rmax, (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]), randcell])
 
 	      Nt = N
 
@@ -231,6 +231,14 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
         end
 
+        if (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]) <= r
+
+          push!(Nvec, N)
+          Δt =  - 1/(Rmax * Nt) * log(rand())
+          t = t + Δt
+          push!(tvec,t)
+        end
+
         #death event if b<r<b+d
         if (birthrates[cells[randcell].fitness] <= r < birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness])
 
@@ -251,14 +259,6 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             push!(tvec,t)
 
-        end
-
-        if (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]) <= r
-
-          push!(Nvec, N)
-          Δt =  - 1/(Rmax * Nt) * log(rand())
-          t = t + Δt
-          push!(tvec,t)
         end
 
         #every cell dies reinitialize simulation
