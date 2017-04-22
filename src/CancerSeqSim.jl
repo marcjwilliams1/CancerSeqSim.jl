@@ -27,7 +27,7 @@ export
   bdprocess,
 
   #functions
-  simulationfinalresults,
+  simulate,
   getmetrics,
   getsummary,
   vafhistogram,
