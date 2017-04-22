@@ -344,7 +344,7 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   Nevent = join(simresult.cloneN, ","),
   teventin = join(IP.tevent, ","),
   s = join(IP.selection, ","),
-  pctfit = join(simresult.pctfit, ","),
+  clonefreq = join(simresult.clonefreq, ","),
   teventtrue = join(simresult.clonetime, ","),
   clonemuts = join(simresult.clonemuts, ","),
   clonetype = join(simresult.clonetype, ","),

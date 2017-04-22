@@ -8,14 +8,14 @@ function show(sresult::InputAndAnalysis)
 
   @printf("\t Number of clones: %d\n\n", sresult.input.numclones)
   if sresult.input.numclones > 0
-    for i in 1:length(sresult.output.pctfit)
+    for i in 1:length(sresult.output.clonefreq)
       @printf("Subclone %d \n", i)
-      @printf("\tFrequency: %.2f\n", sresult.output.pctfit[i])
+      @printf("\tFrequency: %.2f\n", sresult.output.clonefreq[i])
       @printf("\tNumber of mutations in subclone: %d\n", sresult.output.clonemuts[i])
       @printf("\tFitness advantage: %.2f\n", sresult.input.selection[i])
       @printf("\tTime subclone emerges: %.2f\n", sresult.output.clonetime[i])
       @printf("\tPopulation size when subclone emerges: %d\n", sresult.output.cloneN[i])
-      @printf("\tClone parent (1 is host): %d\n", sresult.output.clonetype[i])
+      @printf("\tClone parent (0 is host): %d\n", sresult.output.clonetype[i] - 1)
     end
   else
     @printf("No clones, tumour growth was neutral\n\n")
@@ -29,8 +29,7 @@ function vafhistogram(sresult; annotateclones = false)
 
     if (annotateclones == true) & (sresult.input.numclones > 0)
 
-      xint = sresult.output.pctfit./2
-      push!(xint, sum(xint))
+      xint = sresult.output.clonefreq./2
 
       p1 = plot(DF, x="VAF", y="freq",
       Guide.xlabel("Allelic Frequency f"),

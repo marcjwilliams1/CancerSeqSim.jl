@@ -20,7 +20,8 @@ end
 
 type SimResult
 
-    pctfit::Array{Float64,1}
+    clonefreq::Array{Float64,1}
+    clonefreqp::Array{Float64,1}
     clonetime::Array{Float64,1}
     clonemuts::Array{Int64,1}
     birthrates::Array{Float64,1}
@@ -334,6 +335,19 @@ function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
     return AFnew, cmuts
 end
 
+function calculateclonefreq(pctfit, clonetype)
+
+  ct = clonetype[clonetype .> 0]
+  cf = deepcopy(pctfit)
+
+  for i in reverse(ct)
+    cf[i] = cf[i + 1] + cf[i]
+  end
+
+  return cf
+end
+
+
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     M, fitness, tend, clonetime, clonemuts, br, dr, cloneN, clonetype = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmuts = IP.clonalmuts, nc = IP.numclones)
@@ -380,8 +394,12 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
       end
     end
 
+    clonefreq = calculateclonefreq(pctfit, clonetype - 1)
+
+    !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
+
     #return SimResults object
-    return SimResult(pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype), IP
+    return SimResult(pctfit, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1), IP
 
 end
 
