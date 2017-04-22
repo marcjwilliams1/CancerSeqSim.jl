@@ -105,7 +105,7 @@ function initializesim(clonalmuts)
     #Initialize array of cell type that stores mutations for each cell and their fitness type
     #fitness type of 1 is the host population, lowest fitness
     cells = cancercell[]
-    push!(cells,cancercell([],[],1))
+    push!(cells,cancercell([],1))
 
     #need to keep track of mutations, assuming infinite sites, new mutations will be unique,
     #we assign each new muation with a unique integer by simply counting up from one
