@@ -13,6 +13,7 @@ end
 type AnalysedData
 
     DF::DataFrame
+    VAF::Array{Float64,1}
 
 end
 
@@ -133,7 +134,7 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), DF)
     DF[:prediction] = predict(lmfit)
 
-    return AnalysedData(DF)
+    return AnalysedData(DF, VAF)
 end
 
 function Mcdf(f,fmin,fmax)
@@ -257,9 +258,9 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.VAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.VAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     return InputAndAnalysis(IP, simresult, sampleddata)
@@ -294,7 +295,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
 
       simresult, IP = run1simulation(IP, minclonesize, maxclonesize)
 
-      nctemp = simresult.numclones
+      nctemp = IP.numclones
       if nctemp == nclones
           correctnc = true
       end
@@ -330,7 +331,7 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   sampleddata = inandout.sampleddata
 
   #get cumulativedistributions
-  AD = cumulativedist(sampleddata.VAF, fmin = fmin, fmax = fmax)
+  AD = cumulativedist(inandout, fmin = fmin, fmax = fmax)
 
   allmetrics = getmetrics(AD, metricp, fmin = fmin, fmax = fmax)
 
@@ -342,7 +343,7 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   numclones = IP.numclones,
   Nevent = join(simresult.cloneN, ","),
   teventin = join(IP.tevent, ","),
-  s = join(IP.s, ","),
+  s = join(IP.selection, ","),
   pctfit = join(simresult.pctfit, ","),
   teventtrue = join(simresult.clonetime, ","),
   clonemuts = join(simresult.clonemuts, ","),

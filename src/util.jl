@@ -8,13 +8,14 @@ function show(sresult::InputAndAnalysis)
 
   @printf("\t Number of clones: %d\n\n", sresult.input.numclones)
   if sresult.input.numclones > 0
-    for i in 1:length(sresult.input.pctfit)
+    for i in 1:length(sresult.output.pctfit)
       @printf("Subclone %d \n", i)
-      @printf("\tFrequency: %.2f\n", sresult.input.pctfit[i])
-      @printf("\tNumber of mutations in subclone: %d\n", sresult.input.clonemuts[i])
-      @printf("\tFitness advantage: %.2f\n", sresult.input.s[i])
-      @printf("\tTime subclone emerges: %.2f\n", sresult.input.tevent[i])
-      @printf("\tPopulation size when subclone emerges: %d\n", sresult.input.cloneN[i])
+      @printf("\tFrequency: %.2f\n", sresult.output.pctfit[i])
+      @printf("\tNumber of mutations in subclone: %d\n", sresult.output.clonemuts[i])
+      @printf("\tFitness advantage: %.2f\n", sresult.input.selection[i])
+      @printf("\tTime subclone emerges: %.2f\n", sresult.output.clonetime[i])
+      @printf("\tPopulation size when subclone emerges: %d\n", sresult.output.cloneN[i])
+      @printf("\tClone parent (1 is host): %d\n", sresult.output.clonetype[i])
     end
   else
     @printf("No clones, tumour growth was neutral\n\n")
@@ -28,7 +29,7 @@ function vafhistogram(sresult; annotateclones = false)
 
     if (annotateclones == true) & (sresult.input.numclones > 0)
 
-      xint = sresult.ouput.pctfit./2
+      xint = sresult.output.pctfit./2
       push!(xint, sum(xint))
 
       p1 = plot(DF, x="VAF", y="freq",
