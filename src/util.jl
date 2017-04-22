@@ -28,7 +28,7 @@ function vafhistogram(sresult; annotateclones = false)
 
     if (annotateclones == true) & (sresult.input.numclones > 0)
 
-      xint = sresult.input.pctfit./2
+      xint = sresult.ouput.pctfit./2
       push!(xint, sum(xint))
 
       p1 = plot(DF, x="VAF", y="freq",
@@ -77,7 +77,7 @@ end
 function cumulativeplot(sresult)
 
     DF1 = sresult.output.DF
-    DF, AD = getallmetrics(sresult)
+    DF = getsummary(sresult)
 
     muin = round(DF[:mu][1], 1)
     mufit = round(DF[:muout][1], 1)

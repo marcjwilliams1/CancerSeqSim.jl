@@ -13,7 +13,6 @@ end
 type AnalysedData
 
     DF::DataFrame
-    VAF::Array{Float64,1}
 
 end
 
@@ -42,9 +41,8 @@ type AllMetrics
 end
 
 type InputAndAnalysis
-  input::SimResult
-  output::AnalysedData
-  parameters::InputParameters
+  input::InputParameters
+  output::SimResult
   sampleddata::SampledData
 end
 
@@ -111,7 +109,9 @@ function sampledhist(AF, cellnum, ρ ; det_limit = 0.1, ploidy = 2.0, read_depth
 end
 
 
-function cumulativedist(VAF; fmin = 0.12, fmax = 0.3)
+function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
+
+    VAF = sresult.sampleddata.VAF
 
     #calculate cumulative sum
     steps = fmax:-0.001:fmin
@@ -133,7 +133,7 @@ function cumulativedist(VAF; fmin = 0.12, fmax = 0.3)
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), DF)
     DF[:prediction] = predict(lmfit)
 
-    return AnalysedData(DF, VAF)
+    return AnalysedData(DF)
 end
 
 function Mcdf(f,fmin,fmax)
@@ -264,10 +264,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
         sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
-    #get cumulativedistributions
-    AD = cumulativedist(sampleddata.VAF, fmin = IP.fmin, fmax = IP.fmax)
-
-    return InputAndAnalysis(simresult, AD, IP, sampleddata)
+    return InputAndAnalysis(IP, simresult, sampleddata)
 end
 
 
@@ -314,10 +311,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
         sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
-    #get cumulativedistributions
-    AD = cumulativedist(sampleddata.VAF, fmin = IP.fmin, fmax = IP.fmax)
-
-    return InputAndAnalysis(simresult, AD, IP, sampleddata)
+    return InputAndAnalysis(IP, simresult, sampleddata)
 end
 
 
@@ -332,21 +326,19 @@ function getmetrics(AD, metricp; fmin = 0.1, fmax = 0.3)
 
 end
 
-function getallmetrics(inandout)
+function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
 
-  simresult = inandout.input
-  AD = inandout.output
-  IP = inandout.parameters
+  simresult = inandout.output
+  IP = inandout.input
 
   sampleddata = inandout.sampleddata
 
   #get cumulativedistributions
-  AD = cumulativedist(sampleddata.VAF, fmin = IP.fmin, fmax = IP.fmax)
+  AD = cumulativedist(sampleddata.VAF, fmin = fmin, fmax = fmax)
 
-  allmetrics = getmetrics(AD, metricp, fmin = IP.fmin, fmax = IP.fmax)
-  sname = "10"
+  allmetrics = getmetrics(AD, metricp, fmin = fmin, fmax = fmax)
 
-  fitout = rsq(AD, IP.fmin, IP.fmax, metricp)
+  fitout = rsq(AD, fmin, fmax, metricp)
 
   DF = DataFrame(
   sname = sname,
@@ -375,14 +367,14 @@ function getallmetrics(inandout)
   meanD_pval = allmetrics.meanD.pval,
   rsq = allmetrics.rsq.metric,
   rsq_pval = allmetrics.rsq.pval,
-  fmin = IP.fmin,
-  fmax = IP.fmax,
+  fmin = fmin,
+  fmax = fmax,
   det_limit = IP.det_limit,
   ploidy = IP.ploidy,
   read_depth = IP.read_depth,
   num_muts = AD.DF[:cumsum][end]
   )
 
-  return DF, AD
+  return DF
 
 end

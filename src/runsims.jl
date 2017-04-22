@@ -38,8 +38,6 @@ type InputParameters
     det_limit::Float64
     ploidy::Int64
     read_depth::Float64
-    fmin::Float64
-    fmax::Float64
     clonalmuts::Int64
     selection::Array{Float64,1}
     μ::Float64

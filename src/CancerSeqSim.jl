@@ -28,9 +28,10 @@ export
   #functions
   simulationfinalresults,
   getmetrics,
-  getallmetrics,
+  getsummary,
   vafhistogram,
-  cumulativeplot
+  cumulativeplot,
+  cumulativedist
 
 
 
