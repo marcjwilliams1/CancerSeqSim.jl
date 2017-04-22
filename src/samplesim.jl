@@ -232,7 +232,7 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
-function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
+function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
@@ -243,7 +243,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
     det_limit,
     ploidy,
     read_depth,
-    clonalmuts,
+    clonalmutations,
     s,
     μ,
     b,
@@ -267,7 +267,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
 end
 
 
-function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmuts = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
+function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
 
     correctnc = false
 
@@ -283,7 +283,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       det_limit,
       ploidy,
       read_depth,
-      clonalmuts,
+      clonalmutations,
       s,
       μ,
       b,
@@ -346,7 +346,7 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   s = join(IP.selection, ","),
   clonefreq = join(simresult.clonefreq, ","),
   teventtrue = join(simresult.clonetime, ","),
-  clonemuts = join(simresult.clonemuts, ","),
+  subclonemutations = join(simresult.subclonemutations, ","),
   clonetype = join(simresult.clonetype, ","),
   br = join(simresult.birthrates, ","),
   dr = join(simresult.deathrates, ","),
@@ -355,7 +355,7 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   b = IP.b,
   d = IP.d,
   tend = simresult.tend,
-  clonalmuts = IP.clonalmuts,
+  clonalmutations = IP.clonalmutations,
   area = allmetrics.area.metric,
   area_pval = allmetrics.area.pval,
   Dk = allmetrics.Dk.metric,
