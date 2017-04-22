@@ -14,7 +14,7 @@ import Base.show
 
 export
   # types
-  InputAndAnalysis,
+  Simulation,
   AllMetrics,
   MetricObj,
   RsqObj,

@@ -1,5 +1,5 @@
 
-function show(sresult::InputAndAnalysis)
+function show(sresult::Simulation)
 
   @printf("Input parameters: \n")
   @printf("\t Mutation rate: %.1f\n", sresult.input.μ)
