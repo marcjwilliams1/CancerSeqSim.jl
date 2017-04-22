@@ -21,6 +21,7 @@ end
 type bdprocess
   N::Array{Int64, 1}
   t::Array{Float64, 1}
+  clonefreq::Array{Float64, 1}
 end
 
 type SimResult
@@ -113,11 +114,16 @@ function initializesim(clonalmutations)
     return t,tvec,N,Nvec,cells,mutID
 end
 
-function birthdeathprocess(b, d, Nmax; numclones=0, s = [0.0], tevent=[0.0])
+function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
 
-  simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = 1, clonalmutations = μ, s = [0.0], tevent=[0.0])
+  simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = nclones, clonalmutations = 0.0, s = s, tevent = tevent)
 
-  return bdprocess(simout.Nvec, simout.tvec)
+  M, fitness = cellsconvert(simout.cells)
+
+  pctfit=Float64[]
+  for i in 1:nclones push!(pctfit,sum(fitness.==(i+1))/Nmax) end
+
+  return bdprocess(simout.Nvec, simout.tvec, pctfit)
 end
 
 
@@ -166,6 +172,8 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
         r = rand(Uniform(0,Rmax))
 
+        #println([r, Rmax, birthrates[cells[randcell].fitness]])
+
 	      Nt = N
 
         #birth event if r<birthrate, access correct birthrate from cells array
@@ -185,7 +193,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] + 1
 
-            push!(Nvec,N)
+            push!(Nvec, N)
 
             Δt =  - 1/(Rmax * Nt) * log(rand())
 
@@ -243,6 +251,14 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             push!(tvec,t)
 
+        end
+
+        if (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]) <= r
+
+          push!(Nvec, N)
+          Δt =  - 1/(Rmax * Nt) * log(rand())
+          t = t + Δt
+          push!(tvec,t)
         end
 
         #every cell dies reinitialize simulation
