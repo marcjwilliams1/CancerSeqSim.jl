@@ -242,8 +242,6 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
     det_limit,
     ploidy,
     read_depth,
-    fmin,
-    fmax,
     clonalmuts,
     s,
     μ,
@@ -284,8 +282,6 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       det_limit,
       ploidy,
       read_depth,
-      fmin,
-      fmax,
       clonalmuts,
       s,
       μ,
@@ -306,9 +302,9 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.VAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, simresult.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.VAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     return InputAndAnalysis(IP, simresult, sampleddata)
@@ -342,23 +338,23 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
 
   DF = DataFrame(
   sname = sname,
-  Nmax = simresult.Nmax,
-  numclones = simresult.numclones,
+  Nmax = IP.Nmax,
+  numclones = IP.numclones,
   Nevent = join(simresult.cloneN, ","),
-  tevent = join(simresult.tevent, ","),
-  s = join(simresult.s, ","),
+  teventin = join(IP.tevent, ","),
+  s = join(IP.s, ","),
   pctfit = join(simresult.pctfit, ","),
-  clonetime = join(simresult.clonetime, ","),
+  teventtrue = join(simresult.clonetime, ","),
   clonemuts = join(simresult.clonemuts, ","),
   clonetype = join(simresult.clonetype, ","),
   br = join(simresult.birthrates, ","),
   dr = join(simresult.deathrates, ","),
-  mu = simresult.μ,
+  mu = IP.μ,
   muout = fitout.mu,
-  b = simresult.b,
-  d = simresult.d,
+  b = IP.b,
+  d = IP.d,
   tend = simresult.tend,
-  clonalmuts = simresult.clonalmuts,
+  clonalmuts = IP.clonalmuts,
   area = allmetrics.area.metric,
   area_pval = allmetrics.area.pval,
   Dk = allmetrics.Dk.metric,
