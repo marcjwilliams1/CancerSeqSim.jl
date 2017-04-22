@@ -388,18 +388,16 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     end
 
-    if (IP.numclones) > 1
-      if (pctfit[2] > pctfit[1])
-        IP.numclones = 0
-      end
+    if length(pctfit) > 1
+      clonefreq = calculateclonefreq(pctfit, clonetype - 1)
+      !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
+    else
+      clonefreq = pctfit
     end
 
-    clonefreq = calculateclonefreq(pctfit, clonetype - 1)
-
-    !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
 
     #return SimResults object
-    return SimResult(pctfit, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1), IP
+    return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1), IP
 
 end
 
