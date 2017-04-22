@@ -318,7 +318,7 @@ function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, pl
 
   while ct >= 1
 
-    x = simulationfinalresults(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, fmin = fmin, fmax = fmax, det_limit = det_limit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu)
+    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, fmin = fmin, fmax = fmax, det_limit = det_limit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu)
 
     ct = sum(x.output.clonetype)
 
