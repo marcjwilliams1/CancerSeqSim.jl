@@ -20,19 +20,11 @@ end
 
 type SimResult
 
-    Nmax::Int64
-    numclones::Int64
-    tevent::Array{Float64,1}
-    s::Array{Float64,1}
     pctfit::Array{Float64,1}
     clonetime::Array{Float64,1}
     clonemuts::Array{Int64,1}
     birthrates::Array{Float64,1}
     deathrates::Array{Float64,1}
-    μ::Float64
-    b::Float64
-    d::Float64
-    clonalmuts::Int64
     tend::Float64
     VAF::Array{Float64,1}
     cloneN::Array{Int64, 1}
@@ -344,7 +336,7 @@ function allelefreqexpand(AFDict, μ, clonemuts; fixedmu = false)
     return AFnew, cmuts
 end
 
-function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesize)
+function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     M, fitness, tend, clonetime, clonemuts, br, dr, cloneN, clonetype = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmuts = IP.clonalmuts, nc = IP.numclones)
 
@@ -391,7 +383,7 @@ function run1simulation(simnumber, IP::InputParameters, minclonesize, maxclonesi
     end
 
     #return SimResults object
-    return SimResult(IP.Nmax, IP.numclones, IP.tevent, IP.selection, pctfit, clonetime, cmuts, br, dr, IP.μ, IP.b, IP.d, IP.clonalmuts, tend, AF, cloneN, clonetype), IP
+    return SimResult(pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype), IP
 
 end
 

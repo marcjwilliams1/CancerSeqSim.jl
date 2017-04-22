@@ -255,7 +255,7 @@ function simulationfinalresults(; nclones = 1, ploidy = 2, read_depth = 100.0, f
     fixedmu)
 
     #get simulation data
-    simresult, IP = run1simulation(10, IP, 0.0, 1.0)
+    simresult, IP = run1simulation(IP, 0.0, 1.0)
 
     #get sampled VAFs
     if IP.ρ > 0.0
@@ -299,7 +299,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
       cellularity,
       fixedmu)
 
-      simresult, IP = run1simulation(10, IP, minclonesize, maxclonesize)
+      simresult, IP = run1simulation(IP, minclonesize, maxclonesize)
 
       nctemp = simresult.numclones
       if nctemp == nclones
