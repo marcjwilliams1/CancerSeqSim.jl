@@ -15,7 +15,7 @@ function show(sresult::InputAndAnalysis)
       @printf("\tFitness advantage: %.2f\n", sresult.input.selection[i])
       @printf("\tTime subclone emerges: %.2f\n", sresult.output.clonetime[i])
       @printf("\tPopulation size when subclone emerges: %d\n", sresult.output.cloneN[i])
-      @printf("\tClone parent (0 is host): %d\n", sresult.output.clonetype[i])
+      @printf("\tParent of subclone (0 is host): %d\n", sresult.output.clonetype[i])
     end
   else
     @printf("No clones, tumour growth was neutral\n\n")

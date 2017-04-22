@@ -67,7 +67,7 @@ function sampledhist(AF, cellnum ; det_limit = 0.1, ploidy = 2.0, read_depth = 1
     VAF = samp_alleles./depth
 
     #data for histogram
-    x = 0.0:0.01:1
+    x = 0.005:0.01:1.005
     y = fit(Histogram, VAF, x)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
@@ -102,7 +102,7 @@ function sampledhist(AF, cellnum, ρ ; det_limit = 0.1, ploidy = 2.0, read_depth
     VAF = samp_alleles./depth
 
     #data for histogram
-    x = 0.0:0.01:1
+    x = 0.005:0.01:1.005
     y = fit(Histogram, VAF, x)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
@@ -275,7 +275,7 @@ function simulationfinalresults(minclonesize, maxclonesize; nclones = 1, ploidy 
 
     while correctnc == false
 
-      tevent = sort(rand(Uniform(0.0, 20.0), nclones))
+      tevent = sort(rand(Uniform(3.0, 20.0), nclones))
       s = rand(Uniform(0.0, 25.0), nclones)
 
       IP = InputParameters(nclones,
