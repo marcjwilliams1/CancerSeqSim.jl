@@ -191,7 +191,7 @@ function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tev
                     #keep track of how many clones
                     fitmutant += 1
 
-                    push!(clonetype,cells[randcell].fitness)
+                    push!(clonetype, cells[randcell].fitness)
 
                     #change one mutant to fitter mutant
                     cells[randcell].fitness = fitmutant
