@@ -1,8 +1,7 @@
 
 #type definitions
 type cancercell
-    mutationsA::Array{Int64,1}
-    mutationsB::Array{Int64,1}
+    mutations::Array{Int64,1}
     fitness::Int64
 end
 
@@ -70,38 +69,23 @@ function newmutations(cancercell, μ, mutID)
       return cancercell,mutID
     end
 
-    #numbermutationsA = rand(Poisson(μ/2))
-    #numbermutationsB = rand(Poisson(μ/2))
+    numbermutations= 1
 
-    numbermutationsA = 1
-    numbermutationsB = 0
-
-    cancercell.mutationsA = append!(cancercell.mutationsA,mutID:mutID+numbermutationsA-1)
-    mutID = mutID + numbermutationsA
-
-    cancercell.mutationsB = append!(cancercell.mutationsB,mutID:mutID+numbermutationsB-1)
-    mutID = mutID + numbermutationsB
+    cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
+    mutID = mutID + numbermutations
 
     return cancercell, mutID
 end
 
 function newmutationsinit(cancercell, μ, mutID)
 
-    #initialize clonal mutations
+    numbermutations = 0
 
-    #numbermutationsA = rand(Poisson(μ/2))
-    #numbermutationsB = rand(Poisson(μ/2))
+    cancercell.mutations = append!(cancercell.mutations,mutID:mutID+numbermutations-1)
+    mutID = mutID + numbermutations
 
-    numbermutationsA = 0
-    numbermutationsB = 0
 
-    cancercell.mutationsA = append!(cancercell.mutationsA,mutID:mutID+numbermutationsA-1)
-    mutID = mutID + numbermutationsA
-
-    cancercell.mutationsB = append!(cancercell.mutationsB,mutID:mutID+numbermutationsB-1)
-    mutID = mutID + numbermutationsB
-
-    return cancercell,mutID
+    return cancercell, mutID
 end
 
 function initializesim(clonalmuts)
@@ -228,7 +212,7 @@ function tumourgrow_birthdeath(b,d,Nmax,μ;numclones=1,clonalmuts=μ,s=[0.0],tev
                     Rmax = maximum(birthrates[1:fitmutant]) + maximum(deathrates[1:fitmutant])
 
                     push!(clonetime, t)
-                    push!(clonemuts, deepcopy(cells[randcell].mutationsA ))
+                    push!(clonemuts, deepcopy(cells[randcell].mutations))
                     push!(cloneN, N)
 
                 end
@@ -282,8 +266,7 @@ function cellsconvert(cells)
     mutations = Int64[]
 
     for i in 1:length(cells)
-        append!(mutations,cells[i].mutationsA)
-        append!(mutations,cells[i].mutationsB)
+        append!(mutations,cells[i].mutations)
         fitness[i] = cells[i].fitness
     end
 
