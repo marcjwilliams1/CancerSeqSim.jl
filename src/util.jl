@@ -74,9 +74,10 @@ function makelims(fmax)
 end
 
 
-function cumulativeplot(sresult)
+function cumulativeplot(sresult; fmin = 0.1, fmax = 0.3)
 
-    DF1 = sresult.output.DF
+    AD = cumulativedist(sresult, fmin = fmin, fmax = fmax)
+    DF1 = AD.DF
     DF = getsummary(sresult)
 
     muin = round(DF[:mu][1], 1)

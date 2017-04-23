@@ -33,7 +33,7 @@ type SimResult
     birthrates::Array{Float64,1}
     deathrates::Array{Float64,1}
     tend::Float64
-    VAF::Array{Float64,1}
+    trueVAF::Array{Float64,1}
     cloneN::Array{Int64, 1}
     clonetype::Array{Int64, 1}
 

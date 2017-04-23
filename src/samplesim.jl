@@ -232,7 +232,7 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
-function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
+function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
@@ -258,16 +258,16 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fm
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     return Simulation(IP, simresult, sampleddata)
 end
 
 
-function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
+function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
 
     correctnc = false
 
@@ -303,22 +303,22 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
 
     #get sampled VAFs
     if IP.ρ > 0.0
-        sampleddata = sampledhist(simresult.VAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, IP.ρ, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     else
-        sampleddata = sampledhist(simresult.VAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, det_limit = IP.det_limit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
     end
 
     return Simulation(IP, simresult, sampleddata)
 end
 
-function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, ploidy = 2, read_depth = 100.0, fmin = 0.05, fmax = 0.3, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
+function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
 
   ct = 1
   x = 0.0
 
   while ct >= 1
 
-    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, fmin = fmin, fmax = fmax, det_limit = det_limit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu)
+    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, det_limit = det_limit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu)
 
     ct = sum(x.output.clonetype)
 
