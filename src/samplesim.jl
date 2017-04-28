@@ -267,7 +267,7 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./
 end
 
 
-function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false)
+function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, det_limit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0)
 
     correctnc = false
 
@@ -275,8 +275,8 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
 
     while correctnc == false
 
-      tevent = sort(rand(Uniform(3.0, 20.0), nclones))
-      s = rand(Uniform(0.0, 25.0), nclones)
+      tevent = sort(rand(Uniform(tmin, tmix), nclones))
+      s = rand(Uniform(smin, smax), nclones)
 
       IP = InputParameters(nclones,
       Nmax,
