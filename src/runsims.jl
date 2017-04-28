@@ -44,7 +44,7 @@ end
 type InputParameters
     numclones::Int64
     Nmax::Int64
-    det_limit::Float64
+    detectionlimit::Float64
     ploidy::Int64
     read_depth::Float64
     clonalmutations::Int64
@@ -402,8 +402,8 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     pctfit=Float64[]
     for i in 1:IP.numclones push!(pctfit,sum(fitness.==(i+1))/IP.Nmax) end
 
-    #remove clones that have frequency < det_limit
-#    detectableclones = (pctfit.>(IP.det_limit)) & (pctfit.<0.95)
+    #remove clones that have frequency < detectionlimit
+#    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
     detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)
     pctfit = pctfit[detectableclones]
 
