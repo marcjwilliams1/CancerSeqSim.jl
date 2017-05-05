@@ -38,6 +38,7 @@ type SimResult
     cloneN::Array{Int64, 1}
     clonetype::Array{Int64, 1}
     Ndivisions::Array{Int64, 1}
+    cells::Array{cancercell, 1}
 
 end
 
@@ -313,7 +314,7 @@ function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100
 
     M,fitness = cellsconvert(sresult.cells)
 
-    return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.subclonemutations, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype, sresult.Ndivisions
+    return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.subclonemutations, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype, sresult.Ndivisions, sresult.cells
 
 end
 
@@ -382,7 +383,7 @@ end
 
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
-    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones)
+    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones)
 
     if length(clonetime)!= IP.numclones
 
@@ -429,7 +430,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
 
     #return SimResults object
-    return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1, Ndivisions), IP
+    return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1, Ndivisions, cells), IP
 
 end
 
