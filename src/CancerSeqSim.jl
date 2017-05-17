@@ -43,6 +43,7 @@ export
 ### source files
 include("readdata.jl")
 include("runsims.jl")
+include("runsimssample.jl")
 include("samplesim.jl")
 include("util.jl")
 

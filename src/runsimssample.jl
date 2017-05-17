@@ -62,7 +62,7 @@ end
 
 ###############################################################################
 
-function newmutations(cancercell, μ, mutID)
+function newmutationssample(cancercell, μ, mutID)
 
     #function to add new mutations to cells based on μ
 
@@ -70,7 +70,7 @@ function newmutations(cancercell, μ, mutID)
       return cancercell,mutID
     end
 
-    numbermutations= 1
+    numbermutations = rand(Poisson(μ))
 
     cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
@@ -78,9 +78,9 @@ function newmutations(cancercell, μ, mutID)
     return cancercell, mutID
 end
 
-function newmutationsinit(cancercell, μ, mutID)
+function newmutationsinitsample(cancercell, clonalmutations, mutID)
 
-    numbermutations = 0
+    numbermutations = clonalmutations
 
     cancercell.mutations = append!(cancercell.mutations,mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
@@ -89,7 +89,7 @@ function newmutationsinit(cancercell, μ, mutID)
     return cancercell, mutID
 end
 
-function initializesim(clonalmutations)
+function initializesimsample(clonalmutations)
 
     #initialize empty arrays and first cell with clonal mutations
 
@@ -113,25 +113,12 @@ function initializesim(clonalmutations)
 
     mutID = 1
 
-    cells[1],mutID = newmutationsinit(cells[1],clonalmutations,mutID)
+    cells[1],mutID = newmutationsinitsample(cells[1],clonalmutations,mutID)
 
     return t,tvec,N,Nvec,cells,mutID
 end
 
-function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
-
-  simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = nclones, clonalmutations = 0.0, s = s, tevent = tevent)
-
-  M, fitness = cellsconvert(simout.cells)
-
-  pctfit=Float64[]
-  for i in 1:nclones push!(pctfit,sum(fitness.==(i+1))/Nmax) end
-
-  return bdprocess(simout.Nvec, simout.tvec, pctfit)
-end
-
-
-function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100)
+function tumourgrow_birthdeathsample(b, d, Nmax, μ; numclones=1, clonalmutations = 0, s = [0.0], tevent=[0.0], maxclonefreq = 100)
 
     #set array of birthrates
     birthrates = [b]
@@ -152,7 +139,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     Rmax = b + d
 
     #initialize arrays and parameters
-    t,tvec,N,Nvec,cells,mutID = initializesim(clonalmutations)
+    t,tvec,N,Nvec,cells,mutID = initializesimsample(clonalmutations)
     muts = Int64[]
     push!(muts,mutID)
 
@@ -191,8 +178,8 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
             push!(cells,deepcopy(cells[randcell]))
 
             #add new mutations to both new cells
-            cells[randcell],mutID = newmutations(cells[randcell],μ,mutID)
-            cells[end],mutID = newmutations(cells[end],μ,mutID)
+            cells[randcell],mutID = newmutationssample(cells[randcell],μ,mutID)
+            cells[end],mutID = newmutationssample(cells[end],μ,mutID)
 
             push!(muts,mutID)
 
