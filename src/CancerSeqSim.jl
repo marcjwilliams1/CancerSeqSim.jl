@@ -46,6 +46,7 @@ include("runsims.jl")
 include("runsimssample.jl")
 include("samplesim.jl")
 include("util.jl")
+include("multiplesamples.jl")
 
 
 end
