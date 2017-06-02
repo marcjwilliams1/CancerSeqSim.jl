@@ -25,6 +25,7 @@ export
   RawOutput,
   cancercell,
   bdprocess,
+  SimulationSamples,
 
   #functions
   simulate,
@@ -33,7 +34,8 @@ export
   vafhistogram,
   cumulativeplot,
   cumulativedist,
-  birthdeathprocess
+  birthdeathprocess,
+  getsamples
 
 
 
