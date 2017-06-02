@@ -131,7 +131,9 @@ function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nc
   return bdprocess(simout.Nvec, simout.tvec, pctfit)
 end
 
-function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100, timefunction::Function = exptime() =  - log(rand()))
+exptime() = - log(rand())
+
+function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100, timefunction::Function = exptime)
 
     #set array of birthrates
     birthrates = [b]
@@ -308,7 +310,7 @@ function allelefreq(mutations, cellnum)
 
 end
 
-function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime() =  - log(rand()))
+function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
     sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction);
@@ -385,6 +387,7 @@ end
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones, timefunction = IP.timefunction)
+
 
     if length(clonetime)!= IP.numclones
 
