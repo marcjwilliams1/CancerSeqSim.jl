@@ -58,6 +58,7 @@ type InputParameters
     ρ::Float64
     cellularity::Float64
     fixedmu::Bool
+    timefunction::Function
 end
 
 ###############################################################################
@@ -118,9 +119,9 @@ function initializesim(clonalmutations)
     return t,tvec,N,Nvec,cells,mutID
 end
 
-function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones])
+function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], timefunction::Function = exptime() =  - log(rand()))
 
-  simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = nclones, clonalmutations = 0.0, s = s, tevent = tevent)
+  simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = nclones, clonalmutations = 0.0, s = s, tevent = tevent, timefunction = timefunction)
 
   M, fitness = cellsconvert(simout.cells)
 
@@ -130,8 +131,7 @@ function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nc
   return bdprocess(simout.Nvec, simout.tvec, pctfit)
 end
 
-
-function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100)
+function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100, timefunction::Function = exptime() =  - log(rand()))
 
     #set array of birthrates
     birthrates = [b]
@@ -200,7 +200,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             push!(Nvec, N)
 
-            Δt =  - 1/(Rmax * Nt) * log(rand())
+            Δt =  1/(Rmax * Nt) * timefunction()
 
             t = t + Δt
 
@@ -240,7 +240,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
         if (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]) <= r
 
           push!(Nvec, N)
-          Δt =  - 1/(Rmax * Nt) * log(rand())
+          Δt =  1/(Rmax * Nt) * timefunction()
           t = t + Δt
           push!(tvec,t)
         end
@@ -259,7 +259,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             push!(Nvec,N)
 
-            Δt =  - 1/(Rmax * Nt) * log(rand())
+            Δt =  1/(Rmax * Nt) * timefunction()
 
             t = t + Δt
 
@@ -308,10 +308,10 @@ function allelefreq(mutations, cellnum)
 
 end
 
-function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0)
+function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime() =  - log(rand()))
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
-    sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0);
+    sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction);
 
     M,fitness = cellsconvert(sresult.cells)
 
@@ -384,7 +384,7 @@ end
 
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
-    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones)
+    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones, timefunction = IP.timefunction)
 
     if length(clonetime)!= IP.numclones
 
