@@ -174,11 +174,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
     executed = false
 
-    if VERSION < v"0.6-"
-        changemutrate = !BitArray(numclones + 1)  # Deprecated as of v0.6
-    else
-        changemutrate = .!BitArray(numclones + 1)
-    end
+    changemutrate = broadcast(!, BitArray(numclones + 1))
 
     while N < Nmax
 
