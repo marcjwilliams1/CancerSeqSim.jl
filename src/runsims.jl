@@ -173,7 +173,8 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     clonefreq[1] = 1
 
     executed = false
-    changemutrate = !BitArray(numclones + 1)
+
+    changemutrate = broadcast(!, BitArray(numclones + 1))
 
     while N < Nmax
 
@@ -414,7 +415,13 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     #remove clones that have frequency < detectionlimit
 #    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
-    detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)
+
+    if VERSION < v"0.6-"
+        detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)  # Deprecated as of v0.6
+    else
+        detectableclones = (pctfit.>minclonesize) .& (pctfit.<maxclonesize)
+    end
+
     pctfit = pctfit[detectableclones]
 
     if sum(detectableclones) != IP.numclones
