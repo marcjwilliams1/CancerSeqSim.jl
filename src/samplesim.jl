@@ -55,7 +55,7 @@ function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_dept
     AF = AF./ploidy
     read_depth = read_depth * cellularity
     AF = AF .* cellularity
-    detectionlimit = detectionlimit * cellularity
+    detectionlimit = detectionlimit / cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
     samp_percent = read_depth/cellnum
     depth = rand(Binomial(cellnum,samp_percent), length(AF))
@@ -84,7 +84,7 @@ function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_
     AF = AF./ploidy
     AF = AF .* cellularity
     read_depth = read_depth * cellularity
-    detectionlimit = detectionlimit * cellularity
+    detectionlimit = detectionlimit / cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
     samp_percent = read_depth/cellnum
     depth = rand(Binomial(cellnum, samp_percent), length(AF))
