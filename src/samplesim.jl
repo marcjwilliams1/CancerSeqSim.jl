@@ -55,15 +55,11 @@ function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_dept
     AF = AF./ploidy
 
     AF = AF .* cellularity
-
+    detectionlimit = detectionlimit * cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
-
     samp_percent = read_depth/cellnum
-
     depth = rand(Binomial(cellnum,samp_percent), length(AF))
-
     samp_alleles = map((n, p) -> rand(Binomial(n, p)), depth, AF/cellnum)
-
     VAF = samp_alleles./depth
 
     #data for histogram
@@ -77,28 +73,21 @@ end
 function betabinom(p, n, ρ)
 
     μ = p * n
-
     shape1 = (μ / n) * ((1 / ρ) - 1)
     shape2 = n * shape1/μ - shape1
 
     rand(Binomial(n, rand(Beta(shape1, shape2))))
-
 end
 
 function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-
     AF = AF .* cellularity
-
+    detectionlimit = detectionlimit * cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
-
     samp_percent = read_depth/cellnum
-
     depth = rand(Binomial(cellnum, samp_percent), length(AF))
-
     samp_alleles = map((x, y) -> betabinom(x, y, ρ), AF/cellnum, depth)
-
     VAF = samp_alleles./depth
 
     #data for histogram
@@ -147,13 +136,10 @@ function rsq(AD, fmin, fmax, metricp)
 
     #fit constrained fit
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), AD.DF)
-
     #calculate R^2 value
     rsqval = 1 - (sum(residuals(lmfit) .^ 2) / sum((AD.DF[:cumsum] - 0) .^ 2))
-
     #extract coefficient for mutation rate
     mu = coef(lmfit)[1]
-
     #get pvalue
     pval = metricp[:pval][searchsortedlast(metricp[:invrsqmetric],1 - rsqval)]
 
@@ -215,9 +201,7 @@ end
 function areametric(AD, fmin, fmax, metricp)
 
     area = abs(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
-
     area = area / (1 / fmin - 1 / fmax)
-
     pval = metricp[:pval][searchsortedlast(metricp[:areametric], area)]
 
     return MetricObj(area, pval)
@@ -226,7 +210,6 @@ end
 function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
 
     area = abs(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
-
     area = area / (1 / fmin - 1 / fmax)
 
     return area
