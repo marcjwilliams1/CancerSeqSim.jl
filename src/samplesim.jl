@@ -83,7 +83,7 @@ function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_
 
     AF = AF./ploidy
     AF = AF .* cellularity
-    depth = depth * cellularity
+    read_depth = read_depth * cellularity
     detectionlimit = detectionlimit * cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
     samp_percent = read_depth/cellnum
