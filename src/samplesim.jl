@@ -53,7 +53,7 @@ end
 function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-    depth = depth * cellularity
+    read_depth = read_depth * cellularity
     AF = AF .* cellularity
     detectionlimit = detectionlimit * cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
