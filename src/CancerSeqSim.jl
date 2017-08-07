@@ -6,8 +6,8 @@ using DataFrames
 using GLM
 using Stats
 using HypothesisTests
-using Gadfly
-using Colors
+#using Gadfly
+#using Colors
 using Compose
 using Compat
 
