@@ -32,8 +32,8 @@ export
   simulate,
   getmetrics,
   getsummary,
-  vafhistogram,
-  cumulativeplot,
+  #vafhistogram,
+  #cumulativeplot,
   cumulativedist,
   birthdeathprocess,
   getsamples,
@@ -47,7 +47,7 @@ include("readdata.jl")
 include("runsims.jl")
 include("runsimssample.jl")
 include("samplesim.jl")
-include("util.jl")
+#include("util.jl")
 include("multiplesamples.jl")
 include("runstemcellsim.jl")
 
