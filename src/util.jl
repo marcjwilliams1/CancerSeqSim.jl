@@ -30,7 +30,7 @@ function vafhistogram(sresult; annotateclones = false)
     if (annotateclones == true) & (sresult.input.numclones > 0)
 
       xint = sresult.output.clonefreq./2
-      xint = targetdata.input.cellularity * xint
+      xint = sresult.input.cellularity * xint
 
       p1 = plot(DF, x="VAF", y="freq",
       Guide.xlabel("Allelic Frequency f"),
