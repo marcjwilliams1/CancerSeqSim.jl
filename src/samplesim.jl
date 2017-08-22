@@ -319,12 +319,12 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
     return Simulation(IP, simresult, sampleddata)
 end
 
-function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
 
   ct = 1
   x = 0.0
 
-  while ct >= 1
+  while (ct >= 1)
 
     x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
 
@@ -335,7 +335,24 @@ function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, pl
   return x
 end
 
+function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
 
+  ct = 1
+  x = 0.0
+  freqdiff = false
+
+  while (freqdiff == false)
+
+    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
+
+    if abs(x.output.clonefreq[2] - x.output.clonefreq[1]) > mindiff
+      freqdiff = true
+    end
+
+  end
+
+  return x
+end
 
 function getmetrics(AD, metricp; fmin = 0.1, fmax = 0.3)
 

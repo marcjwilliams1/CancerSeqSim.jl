@@ -449,7 +449,13 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     #remove clones that have frequency < detectionlimit
 #    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
-    detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)
+
+    if VERSION < v"0.6-"
+        detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)  # Deprecated as of v0.6
+    else
+        detectableclones = (pctfit.>minclonesize) .& (pctfit.<maxclonesize)
+    end
+
     pctfit = pctfit[detectableclones]
 
     if sum(detectableclones) != IP.numclones
@@ -471,7 +477,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     else
       clonefreq = pctfit
     end
-
 
     #return SimResults object
     return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1, Ndivisions, cells, aveDivisions), IP

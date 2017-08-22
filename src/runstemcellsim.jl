@@ -125,7 +125,7 @@ function run1simulationstem(Nmax; α = 0.1, maxdivisions = 5, d = 0.4, μ = 1, c
   #AF = counts(M, minimum(M):maximum(M))
   prepend!(AF, repeat([Float64(Nmax)], inner = Int64(clonalmutations)))
 
-  stemcellfrac = (rawresults.cells.ncells / sum(rawresults.cells.ncells)) * 100
+  stemcellfrac = (rawresults.cells.ncells / sum(rawresults.cells.ncells))
 
   return StemCellSimResult(AF, rawresults.cells, rawresults.Nvec, rawresults.divisions, stemcellfrac)
 
