@@ -1,6 +1,28 @@
-
-
 #type definitions
+type CancerStemCell
+    mutations::Array{Int64,1}
+    fitness::Int64
+end
+
+type CancerNonStemCell
+    mutations::Array{Int64,1}
+    fitness::Int64
+    Ndivs::Int64
+end
+
+type CancerCells
+  stemcells::Array{CancerStemCell, 1}
+  nonstemcells::Array{CancerNonStemCell, 1}
+  ncells::Array{Int64, 1}
+  α::Float64
+  d::Float64
+end
+
+type RawResults
+  cells::CancerCells
+  Nvec::Array{Float64, 1}
+end
+
 type cancercell
     mutations::Array{Int64,1}
     fitness::Int64
@@ -61,6 +83,14 @@ type InputParameters
     cellularity::Float64
     fixedmu::Bool
     timefunction::Function
+end
+
+type StemCellSimResult
+
+    trueVAF::Array{Float64,1}
+    cells::CancerCells
+    N::Array{Float64, 1}
+
 end
 
 ###############################################################################
@@ -302,7 +332,7 @@ function cellsconvert(cells)
         fitness[i] = cells[i].fitness
     end
 
-    return mutations,fitness
+    return mutations, fitness
 end
 
 function allelefreq(mutations, cellnum)

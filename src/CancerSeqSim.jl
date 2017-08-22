@@ -35,7 +35,10 @@ export
   cumulativeplot,
   cumulativedist,
   birthdeathprocess,
-  getsamples
+  getsamples,
+  tumourgrow_stemcell,
+  run1simulationstem,
+  simulatestemcells
 
 
 
@@ -49,7 +52,7 @@ include("runsimssample.jl")
 include("samplesim.jl")
 include("util.jl")
 include("multiplesamples.jl")
-include("stemcellsim.jl")
+include("runstemcellsim.jl")
 
 
 end
