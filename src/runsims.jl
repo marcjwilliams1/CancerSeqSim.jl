@@ -391,13 +391,20 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     #remove clones that have frequency < detectionlimit
 #    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
 
-    if VERSION < v"0.6-"
-        detectableclones = (pctfit.>minclonesize) & (pctfit.<maxclonesize)  # Deprecated as of v0.6
+    if length(pctfit) > 1
+      clonefreq = calculateclonefreq(pctfit, clonetype - 1)
+      !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
     else
-        detectableclones = (pctfit.>minclonesize) .& (pctfit.<maxclonesize)
+      clonefreq = pctfit
     end
 
-    pctfit = pctfit[detectableclones]
+    if VERSION < v"0.6-"
+        detectableclones = (clonefreq.>minclonesize) & (clonefreq.<maxclonesize)  # Deprecated as of v0.6
+    else
+        detectableclones = (clonefreq.>minclonesize) .& (clonefreq.<maxclonesize)
+    end
+
+    clonefreq = clonefreq[detectableclones]
 
     if sum(detectableclones) != IP.numclones
 
@@ -410,13 +417,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
         br = br[detectableclones]
         dr = dr[detectableclones]
 
-    end
-
-    if length(pctfit) > 1
-      clonefreq = calculateclonefreq(pctfit, clonetype - 1)
-      !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
-    else
-      clonefreq = pctfit
     end
 
     #return SimResults object
