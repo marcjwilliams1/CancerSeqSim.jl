@@ -49,6 +49,7 @@ include("runsimssample.jl")
 include("samplesim.jl")
 include("util.jl")
 include("multiplesamples.jl")
+include("stemcellsim.jl")
 
 
 end

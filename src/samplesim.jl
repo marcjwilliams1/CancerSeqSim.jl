@@ -53,18 +53,22 @@ end
 function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-    #read_depth = read_depth * cellularity
+
     AF = AF .* cellularity
-    #detectionlimit = detectionlimit / cellularity
+
     filter!(x -> x > detectionlimit * cellnum, AF)
+
     samp_percent = read_depth/cellnum
+
     depth = rand(Binomial(cellnum,samp_percent), length(AF))
+
     samp_alleles = map((n, p) -> rand(Binomial(n, p)), depth, AF/cellnum)
+
     VAF = samp_alleles./depth
 
     #data for histogram
     x = 0.005:0.01:1.005
-    y = fit(Histogram, VAF, x, closed=:right)
+    y = fit(Histogram, VAF, x)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
     SampledData(DFhist, VAF, samp_alleles, depth)
@@ -73,27 +77,33 @@ end
 function betabinom(p, n, ρ)
 
     μ = p * n
+
     shape1 = (μ / n) * ((1 / ρ) - 1)
     shape2 = n * shape1/μ - shape1
 
     rand(Binomial(n, rand(Beta(shape1, shape2))))
+
 end
 
 function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
+
     AF = AF .* cellularity
-    #read_depth = read_depth * cellularity
-    #detectionlimit = detectionlimit / cellularity
+
     filter!(x -> x > detectionlimit * cellnum, AF)
+
     samp_percent = read_depth/cellnum
+
     depth = rand(Binomial(cellnum, samp_percent), length(AF))
+
     samp_alleles = map((x, y) -> betabinom(x, y, ρ), AF/cellnum, depth)
+
     VAF = samp_alleles./depth
 
     #data for histogram
     x = 0.005:0.01:1.005
-    y = fit(Histogram, VAF, x, closed=:right)
+    y = fit(Histogram, VAF, x)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
     SampledData(DFhist, VAF, samp_alleles, depth)
@@ -106,8 +116,8 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
 
     #calculate cumulative sum
     steps = fmax:-0.001:fmin
-    cumsum = Array{Int64}(0)
-    v = Array{Float64}(0)
+    cumsum = Array(Int64, 0)
+    v = Array(Float64, 0)
 
     for i in steps
         push!(cumsum, sum(VAF .>= i))
@@ -137,10 +147,13 @@ function rsq(AD, fmin, fmax, metricp)
 
     #fit constrained fit
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), AD.DF)
+
     #calculate R^2 value
     rsqval = 1 - (sum(residuals(lmfit) .^ 2) / sum((AD.DF[:cumsum] - 0) .^ 2))
+
     #extract coefficient for mutation rate
     mu = coef(lmfit)[1]
+
     #get pvalue
     pval = metricp[:pval][searchsortedlast(metricp[:invrsqmetric],1 - rsqval)]
 
@@ -202,7 +215,9 @@ end
 function areametric(AD, fmin, fmax, metricp)
 
     area = abs(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
+
     area = area / (1 / fmin - 1 / fmax)
+
     pval = metricp[:pval][searchsortedlast(metricp[:areametric], area)]
 
     return MetricObj(area, pval)
@@ -211,6 +226,7 @@ end
 function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
 
     area = abs(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
+
     area = area / (1 / fmin - 1 / fmax)
 
     return area
@@ -297,12 +313,12 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
     return Simulation(IP, simresult, sampleddata)
 end
 
-function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize, independentclones; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
 
   ct = 1
   x = 0.0
 
-  while (ct >= 1)
+  while ct >= 1
 
     x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
 
@@ -313,26 +329,7 @@ function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones =
   return x
 end
 
-function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
 
-  nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
-
-  ct = 1
-  x = 0.0
-  freqdiff = false
-
-  while (freqdiff == false)
-
-    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
-
-    if abs(x.output.clonefreq[2] - x.output.clonefreq[1]) > mindiff
-      freqdiff = true
-    end
-
-  end
-
-  return x
-end
 
 function getmetrics(AD, metricp; fmin = 0.1, fmax = 0.3)
 
