@@ -1,10 +1,12 @@
 #type definitions
-type CancerStemCell
+@compat abstract type Stem end
+
+type CancerStemCell <: Stem
     mutations::Array{Int64,1}
     fitness::Int64
 end
 
-type CancerNonStemCell
+type CancerNonStemCell <: Stem
     mutations::Array{Int64,1}
     fitness::Int64
     Ndivs::Int64
@@ -21,6 +23,7 @@ end
 type RawResults
   cells::CancerCells
   Nvec::Array{Float64, 1}
+  divisions::Array{Int64, 1}
 end
 
 type cancercell
@@ -90,6 +93,8 @@ type StemCellSimResult
     trueVAF::Array{Float64,1}
     cells::CancerCells
     N::Array{Float64, 1}
+    divisions::Array{Float64, 1}
+    stemcellfraction::Array{Float64,1}
 
 end
 

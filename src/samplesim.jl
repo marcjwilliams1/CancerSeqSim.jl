@@ -436,3 +436,45 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
   return DF
 
 end
+
+
+function getsummary(inandout::SimulationStemCells; sname = "", fmin = 0.1, fmax = 0.3)
+
+  simresult = inandout.output
+  IP = inandout.input
+
+  sampleddata = inandout.sampleddata
+
+  #get cumulativedistributions
+  AD = cumulativedist(inandout, fmin = fmin, fmax = fmax)
+
+  allmetrics = getmetrics(AD, metricp, fmin = fmin, fmax = fmax)
+
+  fitout = rsq(AD, fmin, fmax, metricp)
+
+  DF = DataFrame(
+  sname = sname,
+  Nmax = IP.Nmax,
+  numclones = IP.numclones,
+  mu = IP.μ,
+  muout = fitout.mu,
+  clonalmutations = IP.clonalmutations,
+  area = allmetrics.area.metric,
+  area_pval = allmetrics.area.pval,
+  Dk = allmetrics.Dk.metric,
+  Dk_pval = allmetrics.Dk.pval,
+  meanD = allmetrics.meanD.metric,
+  meanD_pval = allmetrics.meanD.pval,
+  rsq = allmetrics.rsq.metric,
+  rsq_pval = allmetrics.rsq.pval,
+  fmin = fmin,
+  fmax = fmax,
+  detectionlimit = IP.detectionlimit,
+  ploidy = IP.ploidy,
+  read_depth = IP.read_depth,
+  num_muts = AD.DF[:cumsum][end]
+  )
+
+  return DF
+
+end

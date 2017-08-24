@@ -1,3 +1,19 @@
+function newmutations2(cancercell::Stem, μ, mutID)
+
+    #function to add new mutations to cells based on μ
+
+    if μ == 0.0
+      return cancercell,mutID
+    end
+
+    numbermutations = rand(Poisson(μ))
+
+    cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
+    mutID = mutID + numbermutations
+
+    return cancercell, mutID
+end
+
 function initializesim(α, d)
 
     #initialize empty arrays and first cell with clonal mutations
@@ -23,7 +39,7 @@ function initializesim(α, d)
 
     #cells[1], mutID = newmutationsinit(cells[1],clonalmutations,mutID)
 
-    return t, tvec, N, Nvec, CancerCells(cells, [], [1, 0], α, d), mutID
+    return t, tvec, N, Nvec, CancerCells(cells, [], [1, 0], α, d), mutID, [0, 0]
 end
 
 function newnonstemcell(cells, rcell)
@@ -35,7 +51,7 @@ function newnonstemcell(cells, rcell)
   return cells
 end
 
-function stemcelldivision(cells, μ, mutid)
+function stemcelldivision(cells, μ, mutid, divisions)
 
   rcell = rand(1:cells.ncells[1])
   r = rand()
@@ -44,14 +60,16 @@ function stemcelldivision(cells, μ, mutid)
     cells.stemcells[rcell], mutid = newmutations(cells.stemcells[rcell], μ, mutid)
     cells.stemcells[end], mutid = newmutations(cells.stemcells[end], μ, mutid)
     cells.ncells[1] += 1
+    divisions[1] += 1
   else
     cells = newnonstemcell(cells, rcell)
     cells.stemcells[rcell], mutid = newmutations(cells.stemcells[rcell], μ, mutid)
     cells.nonstemcells[end], mutid = newmutations(cells.nonstemcells[end], μ, mutid)
     cells.ncells[2] += 1
+    divisions[2] += 1
   end
 
-  return cells, mutid
+  return cells, mutid, divisions
 end
 
 function nonstemcelldivision(cells, μ, mutid, maxdivisions)
@@ -74,15 +92,17 @@ end
 
 function tumourgrow_stemcell(Nmax; α = 0.1, maxdivisions = 5, d = 0.4, μ = 1)
 
-  t, tvec, N, Nvec, cells, mutID = initializesim(α, d)
+  t, tvec, N, Nvec, cells, mutID, divisions = initializesim(α, d)
   Rmax = 1
 
   while sum(cells.ncells) < Nmax
     wt = cells.ncells[1] / (cells.ncells[1] + cells.ncells[2])
     celltype = wsample([1, 2], [wt, 1 - wt])
+    #println(wt)
+    #println(celltype)
     if celltype == 1
       #stem cell division
-      cells, mutID = stemcelldivision(cells, μ, mutID)
+      cells, mutID, divisions = stemcelldivision(cells, μ, mutID, divisions)
     else
       #nonstemcell division
       cells, mutID = nonstemcelldivision(cells, μ, mutID, maxdivisions)
@@ -91,7 +111,7 @@ function tumourgrow_stemcell(Nmax; α = 0.1, maxdivisions = 5, d = 0.4, μ = 1)
     push!(Nvec, sum(cells.ncells))
   end
 
-  return RawResults(cells, Nvec)
+  return RawResults(cells, Nvec, divisions)
 end
 
 function run1simulationstem(Nmax; α = 0.1, maxdivisions = 5, d = 0.4, μ = 1, clonalmutations = 100)
@@ -102,8 +122,11 @@ function run1simulationstem(Nmax; α = 0.1, maxdivisions = 5, d = 0.4, μ = 1, c
 
   AF = allelefreq(M, Nmax)
   AF, cmuts = allelefreqexpand(AF, μ, [])
+  #AF = counts(M, minimum(M):maximum(M))
   prepend!(AF, repeat([Float64(Nmax)], inner = Int64(clonalmutations)))
 
-  return StemCellSimResult(AF, rawresults.cells, rawresults.Nvec)
+  stemcellfrac = (rawresults.cells.ncells / sum(rawresults.cells.ncells)) * 100
+
+  return StemCellSimResult(AF, rawresults.cells, rawresults.Nvec, rawresults.divisions, stemcellfrac)
 
 end
