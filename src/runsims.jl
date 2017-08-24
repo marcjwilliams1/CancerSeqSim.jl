@@ -109,7 +109,6 @@ function newmutations(cancercell, μ, mutID)
     end
 
     numbermutations= 1
-
     cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
 
@@ -119,17 +118,13 @@ end
 function newmutationsinit(cancercell, μ, mutID)
 
     numbermutations = 0
-
     cancercell.mutations = append!(cancercell.mutations,mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
-
 
     return cancercell, mutID
 end
 
 function initializesim(clonalmutations)
-
-    #initialize empty arrays and first cell with clonal mutations
 
     #initialize time to zero
     t = 0.0
@@ -148,9 +143,7 @@ function initializesim(clonalmutations)
 
     #need to keep track of mutations, assuming infinite sites, new mutations will be unique,
     #we assign each new muation with a unique integer by simply counting up from one
-
     mutID = 1
-
     cells[1],mutID = newmutationsinit(cells[1],clonalmutations,mutID)
 
     return t,tvec,N,Nvec,cells,mutID
@@ -159,9 +152,7 @@ end
 function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], timefunction::Function = exptime() =  - log(rand()))
 
   simout = tumourgrow_birthdeath(b, d, Nmax, 0.0; numclones = nclones, clonalmutations = 0.0, s = s, tevent = tevent, timefunction = timefunction)
-
   M, fitness = cellsconvert(simout.cells)
-
   pctfit=Float64[]
   for i in 1:nclones push!(pctfit,sum(fitness.==(i+1))/Nmax) end
 
@@ -175,10 +166,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     #set array of birthrates
     birthrates = [b]
     deathrates = [d]
-
     times = vcat(tevent, 0.0)
-
-    #map!(x->log(1+x)/(b-d),s)
 
     #depending on number of clones add birthrates to model
     for i in 1:numclones
@@ -214,11 +202,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
         #pick a random cell
         randcell = rand(1:N)
-
         r = rand(Uniform(0,Rmax))
-
-        #println([r, Rmax, (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]), randcell])
-
 	      Nt = N
 
         #birth event if r<birthrate, access correct birthrate from cells array
@@ -226,24 +210,16 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             #population increases by one
             N = N + 1
-
             #copy cell and mutations for cell that reproduces
             push!(cells,deepcopy(cells[randcell]))
-
             #add new mutations to both new cells
             cells[randcell],mutID = newmutations(cells[randcell],μ,mutID)
             cells[end],mutID = newmutations(cells[end],μ,mutID)
-
             push!(muts,mutID)
-
             clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] + 1
-
             push!(Nvec, N)
-
             Δt =  1/(Rmax * Nt) * timefunction()
-
             t = t + Δt
-
             push!(tvec,t)
 
             #if population time is tevent, cell is mutated into fitter cell
@@ -252,15 +228,11 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
                     #one mutant turns into another "type" so decreases in frequency
 
                     clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] - 1
-
                     #keep track of how many clones
                     fitmutant += 1
-
                     push!(clonetype, cells[randcell].fitness)
-
                     #change one mutant to fitter mutant
                     cells[randcell].fitness = fitmutant
-
                     #new type increases in frequency
                     clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] + 1
 
@@ -276,11 +248,9 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
                 end
             end
-
         end
 
         if (birthrates[cells[randcell].fitness] + deathrates[cells[randcell].fitness]) <= r
-
           push!(Nvec, N)
           Δt =  1/(Rmax * Nt) * timefunction()
           t = t + Δt
@@ -292,21 +262,14 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
 
             #population decreases by 1
             N = N - 1
-
             #frequency of cell type decreases
             clonefreq[cells[randcell].fitness] = clonefreq[cells[randcell].fitness] - 1
-
             #remove deleted cell
             deleteat!(cells,randcell)
-
             push!(Nvec,N)
-
             Δt =  1/(Rmax * Nt) * timefunction()
-
             t = t + Δt
-
             push!(tvec,t)
-
         end
 
         #every cell dies reinitialize simulation
@@ -345,16 +308,13 @@ function allelefreq(mutations, cellnum)
 
     f = map(Float64, filter!(x->x>0.0,counts(mutations,minimum(mutations):maximum(mutations))))
     muts = sort(unique(mutations))
-
     Dict{Int64, Float64}(muts[i]::Int64 => f[i]::Float64 for i in 1:length(f))
-
 end
 
 function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
     sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction);
-
     M,fitness = cellsconvert(sresult.cells)
 
     return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.subclonemutations, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype, sresult.Ndivisions, sresult.cells, sresult.aveDivisions
@@ -365,16 +325,13 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
 
   #expand allele frequency given mutation rate and calculate number of mutations in the subclones
     if fixedmu == false
-
       AFnew = Int64[]
       cmuts = zeros(Int64, length(subclonemutations))
       mutfreqs = collect(values(AFDict))
       mutids = collect(keys(AFDict))
 
       for f in 1:length(mutfreqs)
-
           x = rand(Poisson(μ))
-
           append!(AFnew, ones(x) * mutfreqs[f])
 
           for i in 1:length(cmuts)
@@ -382,7 +339,6 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
                   cmuts[i] = cmuts[i] + x
               end
           end
-
       end
     else
 
@@ -393,19 +349,14 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
       μint = round(Int64, μ)
 
       for f in 1:length(mutfreqs)
-
           x = μint
-
           append!(AFnew, ones(x) * mutfreqs[f])
-
           for i in 1:length(cmuts)
               if mutids[f] in subclonemutations[i]
                   cmuts[i] = cmuts[i] + x
               end
           end
-
       end
-
     end
 
     return AFnew, cmuts
@@ -415,7 +366,6 @@ function calculateclonefreq(pctfit, clonetype)
 
   ct = clonetype[clonetype .> 0]
   cf = deepcopy(pctfit)
-
   for i in reverse(ct)
     cf[i] = cf[i + 1] + cf[i]
   end
@@ -427,7 +377,6 @@ end
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells, aveDivisions = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones, timefunction = IP.timefunction)
-
 
     if length(clonetime)!= IP.numclones
 
@@ -485,7 +434,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     #return SimResults object
     return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1, Ndivisions, cells, aveDivisions), IP
-
 end
 
 ###############################################################################

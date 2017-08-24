@@ -62,12 +62,9 @@ function vafhistogram(sresult; annotateclones = false)
       key_label_font_size = 10pt,
       default_color = colormap("blues")[80],
       bar_spacing = -0.05cm))
-
     end
 
-
     return p1
-
 end
 
 function makelims(fmax)
@@ -103,7 +100,6 @@ function cumulativeplot(sresult; fmin = 0.1, fmax = 0.3)
     maxvalue = maximum(DF1[:invf]), labels = func),
     Scale.y_continuous(minvalue = 0,
     maxvalue = maximum(DF1[:cumsum])),
-
 
     Theme(major_label_font_size = 12pt,
     major_label_font = "Arial",

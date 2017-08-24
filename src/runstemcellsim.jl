@@ -1,16 +1,12 @@
 function newmutations2(cancercell::Stem, μ, mutID)
 
     #function to add new mutations to cells based on μ
-
     if μ == 0.0
       return cancercell,mutID
     end
-
     numbermutations = rand(Poisson(μ))
-
     cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
-
     return cancercell, mutID
 end
 
@@ -34,7 +30,6 @@ function initializesim(α, d)
 
     #need to keep track of mutations, assuming infinite sites, new mutations will be unique,
     #we assign each new muation with a unique integer by simply counting up from one
-
     mutID = 1
 
     #cells[1], mutID = newmutationsinit(cells[1],clonalmutations,mutID)

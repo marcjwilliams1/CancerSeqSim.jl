@@ -59,17 +59,11 @@ end
 function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-
     AF = AF .* cellularity
-
     filter!(x -> x > detectionlimit * cellnum, AF)
-
     samp_percent = read_depth/cellnum
-
     depth = rand(Binomial(cellnum,samp_percent), length(AF))
-
     samp_alleles = map((n, p) -> rand(Binomial(n, p)), depth, AF/cellnum)
-
     VAF = samp_alleles./depth
 
     #data for histogram
@@ -94,17 +88,11 @@ end
 function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
-
     AF = AF .* cellularity
-
     filter!(x -> x > detectionlimit * cellnum, AF)
-
     samp_percent = read_depth/cellnum
-
     depth = rand(Binomial(cellnum, samp_percent), length(AF))
-
     samp_alleles = map((x, y) -> betabinom(x, y, ρ), AF/cellnum, depth)
-
     VAF = samp_alleles./depth
 
     #data for histogram
@@ -153,13 +141,10 @@ function rsq(AD, fmin, fmax, metricp)
 
     #fit constrained fit
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), AD.DF)
-
     #calculate R^2 value
     rsqval = 1 - (sum(residuals(lmfit) .^ 2) / sum((AD.DF[:cumsum] - 0) .^ 2))
-
     #extract coefficient for mutation rate
     mu = coef(lmfit)[1]
-
     #get pvalue
     pval = metricp[:pval][searchsortedlast(metricp[:invrsqmetric],1 - rsqval)]
 
@@ -169,9 +154,7 @@ end
 function kolmogorovD(AD, fmin, fmax, metricp)
 
     xfiltered = AD.VAF[fmin .< AD.VAF .< fmax]
-
     n = length(xfiltered)
-
     cdfs = 1 - map(x->Mcdf(x, fmin, fmax), sort(xfiltered))
     δp = maximum((1:n) / n - cdfs)
     δn = -minimum((0:n-1) / n - cdfs)
@@ -179,26 +162,22 @@ function kolmogorovD(AD, fmin, fmax, metricp)
     pval = metricp[:pval][searchsortedlast(metricp[:Dkmetric], δ)]
 
     MetricObj(δ, pval)
-
 end
 
 function Draw(DF1, DF2)
 
     maximum(abs(DF1[:cumsum] - DF2[:cumsum]))
-
 end
 
 function meanDraw(DF1, DF2)
 
     #mean(abs(DF1[:cumsum] - DF2[:cumsum]))
     sqrt(sum((DF1[:cumsum] - DF2[:cumsum]).^2))
-
 end
 
 function kolmogorovDmean(AD, fmin, fmax, metricp)
 
     D = mean(abs(convert(Array, AD.DF[:theory]) - convert(Array, AD.DF[:normalized])))
-
     pval = metricp[:pval][searchsortedlast(metricp[:meanDmetric], D)]
 
     return MetricObj(D, pval)
@@ -221,9 +200,7 @@ end
 function areametric(AD, fmin, fmax, metricp)
 
     area = abs(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
-
     area = area / (1 / fmin - 1 / fmax)
-
     pval = metricp[:pval][searchsortedlast(metricp[:areametric], area)]
 
     return MetricObj(area, pval)
@@ -232,7 +209,6 @@ end
 function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
 
     area = abs(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
-
     area = area / (1 / fmin - 1 / fmax)
 
     return area
@@ -241,9 +217,7 @@ end
 function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
-
     nclones == length(tevent) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(tevent)), these must be the same size ")
-
     IP = InputParameters(nclones,
     Nmax,
     detectionlimit,
@@ -277,7 +251,6 @@ end
 function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
 
     correctnc = false
-
     IP, simresult = 0, 0
 
     while correctnc == false
@@ -356,6 +329,28 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, plo
   return x
 end
 
+function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+
+  nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
+
+  ct = 1
+  x = 0.0
+  savesim = false
+
+  while (savesim == false)
+
+    x = simulate(minclonesize, maxclonesize, mindiff; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
+
+    if sum(x.output.subclonemutations .> minmutations) == 2
+      savesim = true
+    end
+
+  end
+
+  return x
+end
+
+
 function getmetrics(AD, metricp; fmin = 0.1, fmax = 0.3)
 
     rsq1 = rsq(AD, fmin, fmax, metricp)
@@ -407,14 +402,10 @@ function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
 
   simresult = inandout.output
   IP = inandout.input
-
   sampleddata = inandout.sampleddata
-
   #get cumulativedistributions
   AD = cumulativedist(inandout, fmin = fmin, fmax = fmax)
-
   allmetrics = getmetrics(AD, metricp, fmin = fmin, fmax = fmax)
-
   fitout = rsq(AD, fmin, fmax, metricp)
 
   DF = DataFrame(
@@ -461,14 +452,10 @@ function getsummary(inandout::SimulationStemCells; sname = "", fmin = 0.1, fmax 
 
   simresult = inandout.output
   IP = inandout.input
-
   sampleddata = inandout.sampleddata
-
   #get cumulativedistributions
   AD = cumulativedist(inandout, fmin = fmin, fmax = fmax)
-
   allmetrics = getmetrics(AD, metricp, fmin = fmin, fmax = fmax)
-
   fitout = rsq(AD, fmin, fmax, metricp)
 
   DF = DataFrame(

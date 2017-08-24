@@ -42,10 +42,6 @@ export
   simulatestemcells
 
 
-
-
-
-
 ### source files
 include("readdata.jl")
 include("runsims.jl")
