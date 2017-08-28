@@ -68,7 +68,7 @@ function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_dept
 
     #data for histogram
     x = 0.005:0.01:1.005
-    y = fit(Histogram, VAF, x)
+    y = fit(Histogram, VAF, x, closed=:right)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
     SampledData(DFhist, VAF, samp_alleles, depth)
@@ -97,7 +97,7 @@ function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_
 
     #data for histogram
     x = 0.005:0.01:1.005
-    y = fit(Histogram, VAF, x)
+    y = fit(Histogram, VAF, x, closed=:right)
     DFhist = DataFrame(VAF = x[1:end-1], freq = y.weights)
 
     SampledData(DFhist, VAF, samp_alleles, depth)
