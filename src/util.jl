@@ -14,6 +14,8 @@ function show(sresult::Simulation)
       @printf("\tNumber of mutations in subclone: %d\n", sresult.output.subclonemutations[i])
       @printf("\tFitness advantage: %.2f\n", sresult.input.selection[i])
       @printf("\tTime subclone emerges: %.2f\n", sresult.output.clonetime[i])
+      @printf("\tNumber of divisions: %d\n", sresult.output.Ndivisions[i])
+      @printf("\tAverage number of divisions per cell in subclone: %.2f\n", sresult.output.aveDivisions[i])
       @printf("\tPopulation size when subclone emerges: %d\n", sresult.output.cloneN[i])
       @printf("\tParent of subclone (0 is host): %d\n", sresult.output.clonetype[i])
     end
