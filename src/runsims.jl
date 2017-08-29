@@ -428,7 +428,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     end
 
     # if clones are nested need to subtract mutations as some are shared
-    if (length(clonetype) == 2) && (sum(clonetype) > 0)
+    if (length(clonetype) == 2) && (sum(clonetype - 1) > 0)
       cmuts[2] = cmuts[2] - cmuts[1]
     end
 
