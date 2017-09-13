@@ -2,43 +2,33 @@
 #type definitions
 
 type SampledData
-
     DF::DataFrame
     VAF::Array{Float64,1}
     counts::Array{Int64,1}
     depth::Array{Int64,1}
-
 end
 
 type AnalysedData
-
     DF::DataFrame
     VAF::Array{Float64,1}
-
 end
 
 type RsqObj
-
     metric::Float64
     mu::Float64
     pval::Float64
-
 end
 
 type MetricObj
-
     metric::Float64
     pval::Float64
-
 end
 
 type AllMetrics
-
     rsq::RsqObj
     area::MetricObj
     Dk::MetricObj
     meanD::MetricObj
-
 end
 
 type Simulation

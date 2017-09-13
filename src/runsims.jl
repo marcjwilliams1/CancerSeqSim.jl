@@ -161,7 +161,7 @@ end
 
 exptime() = - log(rand())
 
-function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 100, timefunction::Function = exptime)
+function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 200, timefunction::Function = exptime)
 
     #set array of birthrates
     birthrates = [b]
