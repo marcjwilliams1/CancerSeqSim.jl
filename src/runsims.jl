@@ -86,6 +86,7 @@ type InputParameters
     cellularity::Float64
     fixedmu::Bool
     timefunction::Function
+    maxclonefreq::Int64
 end
 
 type StemCellSimResult
@@ -196,7 +197,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     clonefreq[1] = 1
 
     executed = false
-    changemutrate = !BitArray(numclones + 1)
+    changemutrate = broadcast(!, BitArray(numclones + 1))
 
     while N < Nmax
 
@@ -311,10 +312,10 @@ function allelefreq(mutations, cellnum)
     Dict{Int64, Float64}(muts[i]::Int64 => f[i]::Float64 for i in 1:length(f))
 end
 
-function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime)
+function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime, maxclonefreq = 200)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
-    sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction);
+    sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction, maxclonefreq = maxclonefreq);
     M,fitness = cellsconvert(sresult.cells)
 
     return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.subclonemutations, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype, sresult.Ndivisions, sresult.cells, sresult.aveDivisions
@@ -376,7 +377,7 @@ end
 
 function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
-    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells, aveDivisions = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones, timefunction = IP.timefunction)
+    M, fitness, tend, clonetime, subclonemutations, br, dr, cloneN, clonetype, Ndivisions, cells, aveDivisions = getresults(IP.tevent, IP.selection, IP.b, IP.d, IP.μ, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, nc = IP.numclones, timefunction = IP.timefunction, maxclonefreq = IP.maxclonefreq)
 
     if length(clonetime)!= IP.numclones
 

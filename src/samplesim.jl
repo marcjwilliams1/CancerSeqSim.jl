@@ -100,8 +100,8 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
 
     #calculate cumulative sum
     steps = fmax:-0.001:fmin
-    cumsum = Array(Int64, 0)
-    v = Array(Float64, 0)
+    cumsum = Array{Int64}(0)
+    v = Array{Float64}(0)
 
     for i in steps
         push!(cumsum, sum(VAF .>= i))
@@ -204,7 +204,7 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
-function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
+function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
     nclones == length(tevent) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(tevent)), these must be the same size ")
@@ -222,7 +222,8 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit 
     ρ,
     cellularity,
     fixedmu,
-    timefunction)
+    timefunction,
+    maxclonefreq)
 
     #get simulation data
     simresult, IP = run1simulation(IP, 0.0, 1.0)
@@ -238,7 +239,7 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit 
 end
 
 
-function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
     correctnc = false
     IP, simresult = 0, 0
@@ -262,7 +263,8 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
       ρ,
       cellularity,
       fixedmu,
-      timefunction)
+      timefunction,
+      maxclonefreq)
 
       simresult, IP = run1simulation(IP, minclonesize, maxclonesize)
 
@@ -282,14 +284,14 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
     return Simulation(IP, simresult, sampleddata)
 end
 
-function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
   ct = 1
   x = 0.0
 
   while (ct >= 1)
 
-    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
+    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
 
     ct = sum(x.output.clonetype)
 
@@ -298,7 +300,7 @@ function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones =
   return x
 end
 
-function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -308,7 +310,7 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, plo
 
   while (freqdiff == false)
 
-    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
+    x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
 
     if abs(x.output.clonefreq[2] - x.output.clonefreq[1]) > mindiff
       freqdiff = true
@@ -319,7 +321,7 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, plo
   return x
 end
 
-function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime)
+function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -329,7 +331,7 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::In
 
   while (savesim == false)
 
-    x = simulate(minclonesize, maxclonesize, mindiff; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction)
+    x = simulate(minclonesize, maxclonesize, mindiff; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
 
     if sum(x.output.subclonemutations .> minmutations) == 2
       savesim = true
