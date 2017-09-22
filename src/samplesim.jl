@@ -204,6 +204,26 @@ function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
     return area
 end
 
+"""
+    simulate(; <keyword arguments>)
+
+Simulate a stochastic model of tumour growth with a single subclone introduced at a random time and with a random fitness advantage. Output return synthetic sequencing data.
+...
+## Arguments
+- `read_depth = 200.0`: Mean read depth of the target data set
+- `detectionlimit = 5/read_depth`: Ability to detect low frequency variants. Assumes 5 reads are needed to call a variant.
+- `μ = 10.0`: Mutation rate per division. At each division a Poisson random variable with mean μ is sampled.
+- `clonalmutations = 100.0`: Number of clonal mutations present in the first cell.
+- `nclones = 1`: Number of subclones introduced
+- `Nmax = 10^4`: Maximum population size.
+- `ρ = 0.0`: Overdispersion parameter for beta-binomial model of sequencing data. ρ = 0.0 means model is binomial sampling
+- `timefunction = exptime`: Function for KMC algorithm timestep. exptime returns an exponentially distributed random variable, if you would rather return the mean of the distribution define a function that returns 1. ie `returnone() = 1`.
+- `ploidy = 2`: ploidy of the genome
+- `d = 0.0`: Death rate of the thost population in the tumour
+- `b = log(2)`: Birth rate of the population. Set to `log(2)` so that tumour doubles with each unit increase in t in the absence of cell death.
+- `fixedmu = false`: If set to false number of mutations per division is fixed and not sampled from a poisson distribution.
+...
+"""
 function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
@@ -238,7 +258,11 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit 
     return Simulation(IP, simresult, sampleddata)
 end
 
+"""
+    simulate(minclonesize, maxclonesize; <keyword arguments>)
 
+Return simulation with frequency of subclones >minclones & <maxclonesize.
+"""
 function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
     correctnc = false
@@ -284,22 +308,29 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
     return Simulation(IP, simresult, sampleddata)
 end
 
+"""
+    simulate(minclonesize, maxclonesize, independentclones::Bool; <keyword arguments>)
+
+Return simulation with frequency of subclones >minclones & <maxclonesize and specify whether subclones are independent or not (ie nested or not). Only applicable to >1 subclone.
+"""
 function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
   ct = 1
   x = 0.0
 
   while (ct >= 1)
-
     x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
-
     ct = sum(x.output.clonetype)
-
   end
 
   return x
 end
 
+"""
+    simulate(minclonesize, maxclonesize, mindiff; <keyword arguments>)
+
+Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff apart.
+"""
 function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
@@ -309,18 +340,20 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, plo
   freqdiff = false
 
   while (freqdiff == false)
-
     x = simulate(minclonesize, maxclonesize; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
-
     if abs(x.output.clonefreq[2] - x.output.clonefreq[1]) > mindiff
       freqdiff = true
     end
-
   end
 
   return x
 end
 
+"""
+    simulate(minclonesize, maxclonesize, mindiff; <keyword arguments>)
+
+Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff and have at least minmutations mutations.
+"""
 function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
@@ -330,13 +363,10 @@ function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::In
   savesim = false
 
   while (savesim == false)
-
     x = simulate(minclonesize, maxclonesize, mindiff; nclones = nclones, ploidy = ploidy, read_depth = read_depth, detectionlimit = detectionlimit, clonalmutations = clonalmutations, μ = μ, d = d, b = b, ρ = ρ, Nmax = Nmax, cellularity = cellularity, fixedmu = fixedmu, tmin = tmin, tmax = tmax, smin = smin, smax = smax, timefunction = timefunction, maxclonefreq = maxclonefreq)
-
     if sum(x.output.subclonemutations .> minmutations) == 2
       savesim = true
     end
-
   end
 
   return x
@@ -351,11 +381,31 @@ function getmetrics(AD, metricp; fmin = 0.1, fmax = 0.3)
     area = areametric(AD, fmin, fmax, metricp)
 
     return(AllMetrics(rsq1, area, Dk, meanD))
-
 end
 
 
-function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth = 100.0, nclones = 0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
+"""
+    simulatestemcells(; <keyword arguments>)
+
+Simulate a stochastic model of tumour growth with a stem cell architecture. Output return synthetic sequencing data.
+...
+## Arguments
+- `α = 0.1`: Symmetric division rate
+- `maxdivisions = 5`: Maximum number of divisions of differentiated cells.
+- `read_depth = 200.0`: Mean read depth of the target data set
+- `detectionlimit = 5/read_depth`: Ability to detect low frequency variants. Assumes 5 reads are needed to call a variant.
+- `μ = 10.0`: Mutation rate per division. At each division a Poisson random variable with mean μ is sampled.
+- `clonalmutations = 100.0`: Number of clonal mutations present in the first cell.
+- `Nmax = 10^4`: Maximum population size.
+- `ρ = 0.0`: Overdispersion parameter for beta-binomial model of sequencing data. ρ = 0.0 means model is binomial sampling
+- `timefunction = exptime`: Function for KMC algorithm timestep. exptime returns an exponentially distributed random variable, if you would rather return the mean of the distribution define a function that returns 1. ie `returnone() = 1`.
+- `ploidy = 2`: ploidy of the genome
+- `d = 0.0`: Death rate of the thost population in the tumour
+- `b = log(2)`: Birth rate of the population. Set to `log(2)` so that tumour doubles with each unit increase in t in the absence of cell death.
+- `fixedmu = false`: If set to false number of mutations per division is fixed and not sampled from a poisson distribution.
+...
+"""
+function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth = 100.0, nclones = 0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 

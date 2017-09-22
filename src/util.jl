@@ -1,4 +1,8 @@
+"""
+    simulate(sresult::Simulation)
 
+Print out summary of simulation.
+"""
 function show(sresult::Simulation)
 
   @printf("Input parameters: \n")
@@ -25,6 +29,11 @@ function show(sresult::Simulation)
 
 end
 
+"""
+    vafhistogram(sresult::Simulation; annotateclones = false)
+
+Plot VAF histogram of simulated synthetic data. If `annotateclones = true`, red line will be drawn showing frequency of subclone(s).
+"""
 function vafhistogram(sresult; annotateclones = false)
 
     DF = sresult.sampleddata.DF
@@ -73,7 +82,11 @@ function makelims(fmax)
   func(x) = "1/$(round(1/(x+(1/fmax)), 3))"
 end
 
+"""
+    cumulativeplot(sresult::Simulation; fmin = 0.1, fmax = 0.3)
 
+Plot cumulative distribution and fit for 1/f model. See Williams. et al 2016.
+"""
 function cumulativeplot(sresult; fmin = 0.1, fmax = 0.3)
 
     AD = cumulativedist(sresult, fmin = fmin, fmax = fmax)
