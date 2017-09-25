@@ -1,4 +1,4 @@
-using TumourVAFSimulation
+using CancerSeqSim
 using Distributions
 using Base.Test
 
