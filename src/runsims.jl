@@ -87,6 +87,7 @@ type InputParameters
     fixedmu::Bool
     timefunction::Function
     maxclonefreq::Int64
+    extrasubclonemutations::Array{Int64, 1}
 end
 
 type StemCellSimResult
@@ -322,43 +323,51 @@ function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100
 
 end
 
-function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
 
-  #expand allele frequency given mutation rate and calculate number of mutations in the subclones
+function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false,
+extrasubclonemutations = 0)
+
+    lastmuts = map(x -> x[end], subclonemutations)
+    #expand allele frequency given mutation rate and calculate number of mutations in the subclones
     if fixedmu == false
-      AFnew = Int64[]
-      cmuts = zeros(Int64, length(subclonemutations))
-      mutfreqs = collect(values(AFDict))
-      mutids = collect(keys(AFDict))
+        AFnew = Int64[]
+        cmuts = zeros(Int64, length(subclonemutations))
+        mutfreqs = collect(values(AFDict))
+        mutids = collect(keys(AFDict))
+            for f in 1:length(mutfreqs)
+                x = rand(Poisson(μ))
+                if mutids[f] in lastmuts
+                    x = extrasubclonemutations[findin(lastmuts, [mutids[f]])[1]]
+                end
+                append!(AFnew, ones(x) * mutfreqs[f])
 
-      for f in 1:length(mutfreqs)
-          x = rand(Poisson(μ))
-          append!(AFnew, ones(x) * mutfreqs[f])
-
-          for i in 1:length(cmuts)
-              if mutids[f] in subclonemutations[i]
-                  cmuts[i] = cmuts[i] + x
-              end
-          end
-      end
+                for i in 1:length(cmuts)
+                    if mutids[f] in subclonemutations[i]
+                        cmuts[i] = cmuts[i] + x
+                    end
+                end
+            end
     else
 
-      AFnew = Int64[]
-      cmuts = zeros(Int64, length(subclonemutations))
-      mutfreqs = collect(values(AFDict))
-      mutids = collect(keys(AFDict))
-      μint = round(Int64, μ)
+        AFnew = Int64[]
+        cmuts = zeros(Int64, length(subclonemutations))
+        mutfreqs = collect(values(AFDict))
+        mutids = collect(keys(AFDict))
+        μint = round(Int64, μ)
 
-      for f in 1:length(mutfreqs)
-          x = μint
-          append!(AFnew, ones(x) * mutfreqs[f])
-          for i in 1:length(cmuts)
-              if mutids[f] in subclonemutations[i]
-                  cmuts[i] = cmuts[i] + x
-              end
-          end
-      end
-    end
+        for f in 1:length(mutfreqs)
+            x = μint
+            if mutids[f] in lastmuts
+                x = extrasubclonemutations[findin(lastmuts, [mutids[f]])[1]]
+            end
+            append!(AFnew, ones(x) * mutfreqs[f])
+            for i in 1:length(cmuts)
+                if mutids[f] in subclonemutations[i]
+                    cmuts[i] = cmuts[i] + x
+                end
+                end
+            end
+        end
 
     return AFnew, cmuts
 end
@@ -391,7 +400,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     end
 
     AF = allelefreq(M, IP.Nmax)
-    AF, cmuts = allelefreqexpand(AF, IP.μ, subclonemutations, fixedmu = IP.fixedmu)
+    AF, cmuts = allelefreqexpand(AF, IP.μ, subclonemutations, fixedmu = IP.fixedmu, extrasubclonemutations = IP.extrasubclonemutations)
     prepend!(AF, repeat([Float64(IP.Nmax)], inner = IP.clonalmutations))
 
     pctfit=Float64[]
