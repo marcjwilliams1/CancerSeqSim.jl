@@ -332,12 +332,14 @@ extrasubclonemutations = 0)
     if fixedmu == false
         AFnew = Int64[]
         cmuts = zeros(Int64, length(subclonemutations))
-        mutfreqs = collect(values(AFDict))
-        mutids = collect(keys(AFDict))
+        d = sort(collect(AFDict))
+        mutfreqs = map(x -> x[2][1], d)
+        mutids = map(x -> x[1][1], d)
             for f in 1:length(mutfreqs)
                 x = rand(Poisson(μ))
                 if mutids[f] in lastmuts
-                    x = extrasubclonemutations[findin(lastmuts, [mutids[f]])[1]]
+                  idx = findin(lastmuts, [mutids[f]])[1]
+                  x = maximum([0, extrasubclonemutations[idx] - cmuts[idx]])
                 end
                 append!(AFnew, ones(x) * mutfreqs[f])
 
@@ -351,14 +353,16 @@ extrasubclonemutations = 0)
 
         AFnew = Int64[]
         cmuts = zeros(Int64, length(subclonemutations))
-        mutfreqs = collect(values(AFDict))
-        mutids = collect(keys(AFDict))
+        d = sort(collect(AFDict))
+        mutfreqs = map(x -> x[2][1], d)
+        mutids = map(x -> x[1][1], d)
         μint = round(Int64, μ)
 
         for f in 1:length(mutfreqs)
             x = μint
             if mutids[f] in lastmuts
-                x = extrasubclonemutations[findin(lastmuts, [mutids[f]])[1]]
+              idx = findin(lastmuts, [mutids[f]])[1]
+              x = maximum([0, extrasubclonemutations[idx] - cmuts[idx]])
             end
             append!(AFnew, ones(x) * mutfreqs[f])
             for i in 1:length(cmuts)
