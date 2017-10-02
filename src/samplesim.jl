@@ -1,4 +1,3 @@
-minsubclonemutations
 #type definitions
 
 type SampledData
