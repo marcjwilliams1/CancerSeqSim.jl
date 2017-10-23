@@ -363,7 +363,7 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
     return AFnew, cmuts
 end
 
-function calculateclonefreq(pctfit, clonetype)
+function calculateclonefreq(pctfit, cmuts, clonetype)
 
   cf = deepcopy(pctfit)
   parent = clonetype
@@ -374,9 +374,10 @@ function calculateclonefreq(pctfit, clonetype)
         continue
     end
     cf[parent[i]] = cf[parent[i]] + cf[i]
+    cmuts[i] = cmuts[i] - cmuts[parent[i]]
   end
 
-  return cf
+  return cf, cmuts
 end
 
 
@@ -404,9 +405,8 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     #remove clones that have frequency < detectionlimit
 #    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
-
     if length(pctfit) > 1
-      clonefreq = calculateclonefreq(pctfit, clonetype - 1)
+      clonefreq, cmuts = calculateclonefreq(pctfit, cmuts, clonetype - 1)
       !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible ($(clonefreq)), $(clonetype), $(pctfit)")
     else
       clonefreq = pctfit
@@ -431,11 +431,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
         br = br[detectableclones]
         dr = dr[detectableclones]
 
-    end
-
-    # if clones are nested need to subtract mutations as some are shared
-    if (length(clonetype) == 2) && (sum(clonetype - 1) > 0)
-      cmuts[2] = cmuts[2] - cmuts[1]
     end
 
     #return SimResults object
