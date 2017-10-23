@@ -365,10 +365,15 @@ end
 
 function calculateclonefreq(pctfit, clonetype)
 
-  ct = clonetype[clonetype .> 0]
   cf = deepcopy(pctfit)
-  for i in reverse(ct)
-    cf[i] = cf[i + 1] + cf[i]
+  parent = clonetype
+  cloneid = collect(1:length(clonetype))
+  prev = 0
+  for i in reverse(cloneid)[1:end-1]
+    if parent[i] == 0
+        continue
+    end
+    cf[parent[i]] = cf[parent[i]] + cf[i]
   end
 
   return cf
@@ -402,7 +407,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     if length(pctfit) > 1
       clonefreq = calculateclonefreq(pctfit, clonetype - 1)
-      !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible")
+      !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible ($(clonefreq)), $(clonetype), $(pctfit)")
     else
       clonefreq = pctfit
     end
