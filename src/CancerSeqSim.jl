@@ -10,6 +10,7 @@ using Gadfly
 using Colors
 using Compose
 using Compat
+using StatsBase
 
 import Base.show
 
@@ -39,17 +40,20 @@ export
   getsamples,
   tumourgrow_stemcell,
   run1simulationstem,
-  simulatestemcells
+  simulatestemcells,
+  simulatedifferentmutations,
+  simulatedifferentmutationsmoran
 
 
 ### source files
 include("readdata.jl")
 include("runsims.jl")
 include("runsimssample.jl")
+include("runstemcellsim.jl")
+include("runsimsdifferentmu.jl")
 include("samplesim.jl")
 include("util.jl")
 include("multiplesamples.jl")
-include("runstemcellsim.jl")
 
 
 end

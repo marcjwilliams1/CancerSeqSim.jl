@@ -78,6 +78,26 @@ function vafhistogram(sresult; annotateclones = false)
     return p1
 end
 
+function vafhistogram(sresult::SimulationM; annotateclones = false)
+
+    DF = sresult.sampleddata.DF
+
+    p1 = plot(DF, x="VAF", y="freq", Geom.bar,
+    Guide.xlabel("Allelic Frequency f"),
+    Guide.ylabel("Number of Mutations"),
+    Guide.xticks(ticks = collect(0.0:0.2:1.0)),
+    Theme(major_label_font_size = 12pt,
+    major_label_font = "Arial",
+    minor_label_font_size = 10pt,
+    minor_label_font = "Arial",
+    key_label_font = "Arial",
+    key_label_font_size = 10pt,
+    default_color = colormap("blues")[80],
+    bar_spacing = -0.05cm))
+
+    return p1
+end
+
 function makelims(fmax)
   func(x) = "1/$(round(1/(x+(1/fmax)), 3))"
 end

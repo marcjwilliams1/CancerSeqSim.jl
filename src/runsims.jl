@@ -312,7 +312,7 @@ function allelefreq(mutations, cellnum)
     Dict{Int64, Float64}(muts[i]::Int64 => f[i]::Float64 for i in 1:length(f))
 end
 
-function getresults(tevent, s, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime, maxclonefreq = 200)
+function getresults(tevent::Array{Float64, 1}, s::Array{Float64, 1}, b, d, μ, Nmax; ploidy = 2, clonalmutations = 100, nc = 0, timefunction = exptime, maxclonefreq = 200)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
     sresult = tumourgrow_birthdeath(b, d, Nmax, μ; numclones = nc, s = s, tevent = tevent, clonalmutations = 0, timefunction = timefunction, maxclonefreq = maxclonefreq);

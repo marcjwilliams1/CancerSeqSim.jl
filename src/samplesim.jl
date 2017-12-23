@@ -37,6 +37,12 @@ type Simulation
   sampleddata::SampledData
 end
 
+type SimulationM
+  input::InputParametersM
+  output::SimResultM
+  sampleddata::SampledData
+end
+
 type SimulationStemCells
   input::InputParameters
   output::StemCellSimResult
@@ -156,18 +162,18 @@ end
 
 function Draw(DF1, DF2)
 
-    maximum(abs(DF1[:cumsum] - DF2[:cumsum]))
+    maximum(abs(DF1[:cumsum] .- DF2[:cumsum]))
 end
 
 function meanDraw(DF1, DF2)
 
     #mean(abs(DF1[:cumsum] - DF2[:cumsum]))
-    sqrt(sum((DF1[:cumsum] - DF2[:cumsum]).^2))
+    sqrt(sum((DF1[:cumsum] .- DF2[:cumsum]).^2))
 end
 
 function kolmogorovDmean(AD, fmin, fmax, metricp)
 
-    D = mean(abs(convert(Array, AD.DF[:theory]) - convert(Array, AD.DF[:normalized])))
+    D = mean(abs.(convert(Array, AD.DF[:theory]) .- convert(Array, AD.DF[:normalized])))
     pval = metricp[:pval][searchsortedlast(metricp[:meanDmetric], D)]
 
     return MetricObj(D, pval)
@@ -181,7 +187,7 @@ function trapz{T<:Number}(x::Vector{T}, y::Vector{T})
     if n == 1; return 0.0; end
     r = 0.0
     for i in 2:n
-        r += (x[i] - x[i-1]) * (y[i] + y[i-1])
+        r += (x[i] .- x[i-1]) .* (y[i] .+ y[i-1])
 
     end
     r / 2.0
@@ -189,7 +195,7 @@ end
 
 function areametric(AD, fmin, fmax, metricp)
 
-    area = abs(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
+    area = abs.(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
     area = area / (1 / fmin - 1 / fmax)
     pval = metricp[:pval][searchsortedlast(metricp[:areametric], area)]
 
@@ -198,7 +204,7 @@ end
 
 function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
 
-    area = abs(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
+    area = abs.(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
     area = area / (1 / fmin - 1 / fmax)
 
     return area
@@ -438,6 +444,70 @@ function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth =
     end
 
     return SimulationStemCells(IP, simresult, sampleddata)
+end
+
+
+function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1)
+
+    IP = InputParametersM(
+    Nmax,
+    detectionlimit,
+    ploidy,
+    read_depth,
+    clonalmutations,
+    μp,
+    μd,
+    μneg,
+    b,
+    d,
+    ρ,
+    cellularity,
+    s,
+    timefunction)
+
+    #get simulation data
+    simresult, IP = run1simulation(IP)
+
+    #get sampled VAFs
+    if IP.ρ > 0.0
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, IP.ρ, detectionlimit = IP.detectionlimit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+    else
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, detectionlimit = IP.detectionlimit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+    end
+
+    return SimulationM(IP, simresult, sampleddata)
+end
+
+
+function simulatedifferentmutationsmoran(tmax; ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1)
+
+    IP = InputParametersM(
+    Nmax,
+    detectionlimit,
+    ploidy,
+    read_depth,
+    clonalmutations,
+    μp,
+    μd,
+    μneg,
+    b,
+    d,
+    ρ,
+    cellularity,
+    s,
+    timefunction)
+
+    #get simulation data
+    simresult, IP = run1simulation(IP, tmax)
+
+    #get sampled VAFs
+    if IP.ρ > 0.0
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, IP.ρ, detectionlimit = IP.detectionlimit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+    else
+        sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, detectionlimit = IP.detectionlimit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
+    end
+
+    return SimulationM(IP, simresult, sampleddata)
 end
 
 function getsummary(inandout; sname = "", fmin = 0.1, fmax = 0.3)
