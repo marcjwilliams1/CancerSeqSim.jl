@@ -140,6 +140,7 @@ function initializesim(clonalmutations)
     #Initialize array of cell type that stores mutations for each cell and their fitness type
     #fitness type of 1 is the host population, lowest fitness
     cells = cancercell[]
+    #sizehint!(cells, 10^5)
     push!(cells,cancercell([],1))
 
     #need to keep track of mutations, assuming infinite sites, new mutations will be unique,
@@ -161,6 +162,10 @@ function birthdeathprocess(b, d, Nmax; nclones = 0, s = repeat([1.0], inner = nc
 end
 
 exptime() = - log(rand())
+
+function copycell(cancercellold::cancercell)
+  newcancercell::cancercell = cancercell(copy(cancercellold.mutations), copy(cancercellold.fitness))
+end
 
 function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ, s = [0.0], tevent=[0.0], maxclonefreq = 200, timefunction::Function = exptime)
 
@@ -212,7 +217,8 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
             #population increases by one
             N = N + 1
             #copy cell and mutations for cell that reproduces
-            push!(cells, deepcopy(cells[randcell]))
+            #push!(cells, deepcopy(cells[randcell]))
+            push!(cells, copycell(cells[randcell]))
             #add new mutations to both new cells
             cells[randcell],mutID = newmutations(cells[randcell],μ,mutID)
             cells[end],mutID = newmutations(cells[end],μ,mutID)
