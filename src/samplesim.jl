@@ -60,6 +60,12 @@ function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_dept
     samp_percent = read_depth/cellnum
     depth = rand(Binomial(cellnum,samp_percent), length(AF))
     samp_alleles = map((n, p) -> rand(Binomial(n, p)), depth, AF/cellnum)
+    #samp_alleles = zeros(Float64, length(AF))
+
+    #for i in 1:length(samp_alleles)
+    #  samp_alleles[i] = rand(Binomial(depth[i], AF[i]/cellnum))
+    #end
+
     VAF = samp_alleles./depth
 
     #data for histogram
