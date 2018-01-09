@@ -301,6 +301,7 @@ function cellsconvert(cells)
 
     fitness = zeros(Int64,length(cells))
     mutations = Int64[]
+    sizehint!(mutations, length(cells) * 10)
 
     for i in 1:length(cells)
         append!(mutations,cells[i].mutations)
