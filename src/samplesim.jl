@@ -52,7 +52,7 @@ end
 ###############################################################################
 
 
-function sampledhist(AF, cellnum ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
+function sampledhist(AF::Array{Float64, 1}, cellnum::Int64; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
     AF = AF .* cellularity

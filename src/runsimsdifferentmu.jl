@@ -138,6 +138,7 @@ function initializesim(mup, mud, muneg, b, d)
 end
 
 
+
 function initializesim(mup, mud, muneg, b, d, Ncells)
 
     #initialize time to zero
@@ -165,8 +166,6 @@ function initializesim(mup, mud, muneg, b, d, Ncells)
     return t, tvec, N, Nvec, cells, mutIDp, mutIDd, mutIDneg
 end
 
-exptime() = - log(rand())
-
 function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, timefunction::Function = exptime, s = 0.1)
 
     t, tvec, N, Nvec, cells, mutIDp, mutIDd, mutIDneg = initializesim(μp, μd, μneg, b, d, Nmax)
@@ -176,7 +175,7 @@ function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, t
     while t < maxt
       celldie = rand(1:Nmax)
       cellbirth = sample(1:Nmax, weights(wts))
-      cells[celldie] = deepcopy(cells[cellbirth])
+      cells[celldie] = copycell(cells[cellbirth])
       cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
       cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
       Δt =  1/(Nmax) * timefunction()
@@ -187,6 +186,23 @@ function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, t
     end
 
     return cells, tvec, Rmax
+end
+
+
+function copycell(cancercellold::cancercellM)
+  newcancercell::cancercellM = cancercellM(copy(cancercellold.mutationsp),
+  copy(cancercellold.mutationsd),
+  copy(cancercellold.mutationsneg),
+  copy(cancercellold.b),
+  copy(cancercellold.d),
+  copy(cancercellold.binitial),
+  copy(cancercellold.dinitial),
+  copy(cancercellold.fitness),
+  copy(cancercellold.fitnessneg),
+  copy(cancercellold.μp),
+  copy(cancercellold.μd),
+  copy(cancercellold.μneg),
+  copy(cancercellold.timedrivers))
 end
 
 function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μp, timefunction::Function = exptime, s = 0.1)
@@ -214,7 +230,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μ
             #population increases by one
             N = N + 1
             #copy cell and mutations for cell that reproduces
-            push!(cells,deepcopy(cells[randcell]))
+            push!(cells,copycell(cells[randcell]))
             #add new mutations to both new cells
             cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
             cells[end], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[end], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
