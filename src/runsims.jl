@@ -312,8 +312,11 @@ end
 function allelefreq(mutations, cellnum)
     #creat dictionary that maps mutation ID to allele frequency
 
-    f = map(Float64, filter!(x->x>0.01 * cellnum,counts(mutations,minimum(mutations):maximum(mutations))))
+    f = counts(mutations,minimum(mutations):maximum(mutations))
     muts = sort(unique(mutations))
+    idx = f .> 0.01
+    f = map(Float64, f[idx])
+    muts = muts[idx]
     Dict{Int64, Float64}(muts[i]::Int64 => f[i]::Float64 for i in 1:length(f))
 end
 
@@ -326,48 +329,6 @@ function getresults(tevent::Array{Float64, 1}, s::Array{Float64, 1}, b, d, μ, N
     return M, fitness, sresult.tvec[end], sresult.clonetime, sresult.subclonemutations, sresult.birthrates, sresult.deathrates, sresult.cloneN, sresult.clonetype, sresult.Ndivisions, sresult.cells, sresult.aveDivisions
 
 end
-
-function allelefreqexpand2(AFDict, μ, subclonemutations; fixedmu = false)
-
-  #expand allele frequency given mutation rate and calculate number of mutations in the subclones
-  #subclonemutations = convert(Array{Array{Int64,1},1}, subclonemutations)
-  if fixedmu == false
-    AFnew = Int64[]
-    cmuts = zeros(Int64, length(subclonemutations))
-    mutfreqs = collect(values(AFDict))
-    mutids = collect(keys(AFDict))
-
-    for f in 1:length(mutfreqs)
-        x = rand(Poisson(μ))
-        append!(AFnew, ones(x) * mutfreqs[f])
-
-        for i in 1:length(cmuts)
-            if mutids[f] in subclonemutations[i]
-                cmuts[i] = cmuts[i] + x
-            end
-        end
-    end
-  else
-    AFnew = Int64[]
-    cmuts = zeros(Int64, length(subclonemutations))
-    mutfreqs = collect(values(AFDict))
-    mutids = collect(keys(AFDict))
-    μint = round(Int64, μ)
-
-    for f in 1:length(mutfreqs)
-        x = μint
-        append!(AFnew, ones(x) * mutfreqs[f])
-        for i in 1:length(cmuts)
-            if mutids[f] in subclonemutations[i]
-                cmuts[i] = cmuts[i] + x
-            end
-        end
-    end
-  end
-
-    return AFnew, cmuts
-end
-
 
 function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
 
@@ -395,14 +356,16 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
     mutfreqs = collect(values(AFDict))
     mutids = collect(keys(AFDict))
     μint = round(Int64, μ)
-    mutations = fill(μ, length(mutfreqs))
+    mutations = fill(Int64(μ), length(mutfreqs))
     AFnew = zeros(Int64, sum(mutations))
+    cmuts = zeros(Int64, length(subclonemutations))
 
     for i in 1:length(cmuts)
       idx = findin(mutids, subclonemutations[i])
       cmuts[i] = sum(mutations[idx])
     end
 
+    j = 0
     for f in 1:length(mutfreqs)
       AFnew[(j + 1): j + mutations[f]] = fill(mutfreqs[f], mutations[f])
       j = j + mutations[f]
@@ -445,7 +408,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     end
 
-    AF = allelefreq(M, IP.Nmax)
+    AF = allelefreq2(M, IP.Nmax)
     AF, cmuts = allelefreqexpand(AF, IP.μ, subclonemutations, fixedmu = IP.fixedmu)
     #prepend!(AF, repeat([Float64(IP.Nmax)], inner = IP.clonalmutations))
     prepend!(AF, fill(Float64(IP.Nmax), IP.clonalmutations))
