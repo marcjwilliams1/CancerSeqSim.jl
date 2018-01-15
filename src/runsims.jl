@@ -408,7 +408,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
 
     end
 
-    AF = allelefreq2(M, IP.Nmax)
+    AF = allelefreq(M, IP.Nmax)
     AF, cmuts = allelefreqexpand(AF, IP.μ, subclonemutations, fixedmu = IP.fixedmu)
     #prepend!(AF, repeat([Float64(IP.Nmax)], inner = IP.clonalmutations))
     prepend!(AF, fill(Float64(IP.Nmax), IP.clonalmutations))
