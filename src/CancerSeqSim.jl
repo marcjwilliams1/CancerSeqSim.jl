@@ -11,7 +11,6 @@ using Colors
 using Compose
 using Compat
 using StatsBase
-using BenchmarkTools
 
 import Base.show
 
