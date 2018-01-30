@@ -6,20 +6,21 @@ Print out summary of simulation.
 function show(sresult::Simulation)
 
   @printf("Input parameters: \n")
-  @printf("\t Mutation rate: %.1f\n", sresult.input.μ)
-  @printf("\t Death rate of host population: %.1f\n", sresult.input.d)
+  @printf("\t Mutation rate: %.2f\n", sresult.input.μ)
+  @printf("\t Death rate of host population: %.2f\n", sresult.input.d)
+  @printf("\t Effective mutation rate (μ/β): %.2f\n", sresult.input.μ / ((sresult.input.b-sresult.input.d)/sresult.input.b))
   @printf("\t Number of clonal mutation: %d\n", sresult.input.clonalmutations)
 
-  @printf("\t Number of clones: %d\n\n", sresult.input.numclones)
+  @printf("\t Number of subclones: %d\n\n", sresult.input.numclones)
   if sresult.input.numclones > 0
     for i in 1:length(sresult.output.clonefreq)
       @printf("Subclone %d \n", i)
       @printf("\tFrequency: %.2f\n", sresult.output.clonefreq[i])
       @printf("\tNumber of mutations in subclone: %d\n", sresult.output.subclonemutations[i])
       @printf("\tFitness advantage: %.2f\n", sresult.input.selection[i])
-      @printf("\tTime subclone emerges: %.2f\n", sresult.output.clonetime[i])
+      @printf("\tTime subclone emerges (population doublings): %.2f\n", log(sresult.output.cloneN[i])/log(2))
       @printf("\tNumber of divisions: %d\n", sresult.output.Ndivisions[i])
-      @printf("\tAverage number of divisions per cell in subclone: %.2f\n", sresult.output.aveDivisions[i])
+      @printf("\tAverage number of divisions per cell: %.2f\n", sresult.output.aveDivisions[i])
       @printf("\tPopulation size when subclone emerges: %d\n", sresult.output.cloneN[i])
       @printf("\tParent of subclone (0 is host): %d\n", sresult.output.clonetype[i])
     end

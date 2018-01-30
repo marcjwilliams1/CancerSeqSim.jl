@@ -169,6 +169,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     birthrates = [b]
     deathrates = [d]
     times = vcat(tevent, 0.0)
+    timesN = round.(Int64, vcat(exp.(log(2).*times[1:end-1]), 0.0))
 
     #depending on number of clones add birthrates to model, fitness is randomly distributed between death and birth rates
     for i in 1:numclones
@@ -228,7 +229,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
             push!(tvec,t)
 
             #if population time is tevent, cell is mutated into fitter cell
-            if t > times[fitmutant]
+            if N >= timesN[fitmutant]
                 if fitmutant != numclones + 1
                     #one mutant turns into another "type" so decreases in frequency
 
@@ -313,7 +314,7 @@ function allelefreq(mutations, cellnum)
     #creat dictionary that maps mutation ID to allele frequency
 
     f = counts(mutations,minimum(mutations):maximum(mutations))
-    muts = sort(unique(mutations))
+    muts = collect(minimum(mutations):maximum(mutations))
     idx = f .> 0.01
     f = map(Float64, f[idx])
     muts = muts[idx]
