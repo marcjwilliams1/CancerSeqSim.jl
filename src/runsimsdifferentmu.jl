@@ -63,7 +63,7 @@ type InputParametersM
     d::Float64
     ρ::Float64
     cellularity::Float64
-    s::Float64
+    s
     timefunction::Function
 end
 
@@ -85,7 +85,8 @@ function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t
     #increase fitness due to driver mutations
     for i in 1:numbermutationsd
       #push!(cancercell.fitness, rand(Exponential(0.1)))
-      push!(cancercell.fitness, s)
+      stemp = s()
+      push!(cancercell.fitness, stemp)
       push!(cancercell.timedrivers, t)
     end
     #println(cancercell.fitness)
