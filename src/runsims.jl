@@ -160,7 +160,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     #set array of birthrates
     birthrates = [b]
     deathrates = [d]
-    #times = vcat(tevent, 0.0)
+    times = vcat(tevent, 0.0)
     #time is defined in terms of population doublings
     timesN = round.(Int64, vcat(exp.(log(2).*times[1:end-1]), 0.0))
 
