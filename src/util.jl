@@ -1,9 +1,9 @@
 """
-    simulate(sresult::Simulation)
+    show(sresult::Simulation)
 
 Print out summary of simulation.
 """
-function show(sresult::Simulation)
+function show(io::IO, sresult::Simulation)
 
   @printf("Input parameters: \n")
   @printf("\t Mutation rate: %.2f\n", sresult.input.μ)
@@ -153,4 +153,30 @@ function cumulativeplot(sresult; fmin = 0.1, fmax = 0.3)
     Guide.ylabel("Cumulative # of Mutations M(f)"),
     Guide.xticks(ticks = [1/maxrange - 1/maxrange, 1/minrange - 1/maxrange]))
 
+end
+
+function selection(λ, f, tend, t1)
+    #define the equation for selection as above
+    s = (λ .* t1 + log.(f ./ (1 - f))) ./ (λ .* (tend - t1))
+    return s
+end
+
+
+function selection2clone(λ, f1, f2, tend, t1, t2)
+    #define the equation for selection as above
+
+    s1 = zeros(Float64, length(f1))
+    s2 = zeros(Float64, length(f1))
+
+    for i in 1:length(f1)
+      if (f2[i] + f1[i]) < 1.0
+        s1[i] = (λ .* t1[i] + log.(f1[i] ./ (1 - f1[i] - f2[i]))) ./ (λ .* (tend[i] - t1[i]))
+        s2[i] = (λ .* t2[i] + log.(f2[i] ./ (1 - f1[i] - f2[i]))) ./ (λ .* (tend[i] - t2[i]))
+      else
+        s1[i] = (λ .* t1[i] + log.((f1[i] - f2[i]) ./ (1 - f1[i]))) ./ (λ .* (tend[i] - t1[i]))
+        s2[i] = (λ .* t2[i] + log.(f2[i] ./ (1 - f1[i]))) ./ (λ .* (tend[i] - t2[i]))
+      end
+    end
+
+    return s1, s2
 end

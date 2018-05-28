@@ -1,12 +1,6 @@
 #type definitions
 @compat abstract type Stem end
 
-type RawResults
-  cells::CancerCells
-  Nvec::Array{Float64, 1}
-  divisions::Array{Int64, 1}
-end
-
 type cancercellM
     mutationsp::Array{Int64,1}
     mutationsd::Array{Int64,1}
@@ -21,21 +15,6 @@ type cancercellM
     μd::Float64
     μneg::Float64
     timedrivers::Array{Float64, 1}
-end
-
-type RawOutput
-    Nvec::Array{Int64, 1}
-    tvec::Array{Float64, 1}
-    muts::Array{Int64, 1}
-    cells::Array{cancercell, 1}
-    birthrates::Array{Float64, 1}
-    deathrates::Array{Float64, 1}
-    clonetype::Array{Int64, 1}
-    clonetime::Array{Float64, 1}
-    subclonemutations::Array{Any, 1}
-    cloneN::Array{Int64, 1}
-    Ndivisions::Array{Int64, 1}
-    aveDivisions::Array{Float64, 1}
 end
 
 type SimResultM
@@ -65,11 +44,12 @@ type InputParametersM
     cellularity::Float64
     s
     timefunction::Function
+    fitnessfunc
 end
 
 ###############################################################################
 
-function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t, s)
+function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t, s, fitnessfunc)
 
     #function to add new mutations to cells based on μ
     numbermutationsp = rand(Poisson(cancercell.μp))
@@ -84,15 +64,12 @@ function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t
     b = cancercell.binitial
     #increase fitness due to driver mutations
     for i in 1:numbermutationsd
-      #push!(cancercell.fitness, rand(Exponential(0.1)))
       stemp = s()
       push!(cancercell.fitness, stemp)
       push!(cancercell.timedrivers, t)
     end
     #println(cancercell.fitness)
-    for i in cancercell.fitness
-      b = b * (1 + i)
-    end
+    b = fitnessfunc(cancercell, b)
 
     #decrease fitness due to driver mutations
     for i in 1:numbermutationsneg
@@ -113,6 +90,20 @@ function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t
     end
 
     return cancercell, mutIDp, mutIDd, mutIDneg, Rmax
+end
+
+function multiplicativefitness(cancercell, b)
+  for i in cancercell.fitness
+    b = b * (1 + i)
+  end
+  return b
+end
+
+function nonmultiplicativefitness(cancercell, b)
+  for i in cancercell.fitness
+    b = cancercell.binitial * (1 + i)
+  end
+  return b
 end
 
 function initializesim(mup, mud, muneg, b, d)
@@ -206,7 +197,7 @@ function copycell(cancercellold::cancercellM)
   copy(cancercellold.timedrivers))
 end
 
-function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μp, timefunction::Function = exptime, s = 0.1)
+function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μp, timefunction::Function = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
 
     #Rmax starts with b + d and changes once a fitter mutant is introduced, this ensures that
     # b and d have correct units
@@ -233,8 +224,9 @@ function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μ
             #copy cell and mutations for cell that reproduces
             push!(cells,copycell(cells[randcell]))
             #add new mutations to both new cells
-            cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
-            cells[end], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[end], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
+            cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[randcell], mutIDp, mutIDd, mutIDneg, Rmax, t, s,
+            fitnessfunc)
+            cells[end], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[end], mutIDp, mutIDd, mutIDneg, Rmax, t, s, fitnessfunc)
             push!(Nvec, N)
             Δt =  1/(Rmaxt * Nt) * timefunction()
             t = t + Δt
@@ -294,10 +286,10 @@ function cellsconvert(cells::Array{cancercellM, 1})
     return mutationsp, mutationsd, mutationsneg, fitnessb, sort(unique(drivertime))
 end
 
-function getresults(b, d, μp, μd, μneg, Nmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = 0.1)
+function getresults(b, d, μp, μd, μneg, Nmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
-    cells, tvec, Rmax = tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = 0, timefunction = timefunction, s = s);
+    cells, tvec, Rmax = tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = 0, timefunction = timefunction, s = s, fitnessfunc = fitnessfunc);
     Mp, Md, Mneg, fitness, timedrivers = cellsconvert(cells)
 
     return Mp, Md, Mneg, fitness, tvec, cells, timedrivers
@@ -314,7 +306,7 @@ end
 
 function run1simulation(IP::InputParametersM)
 
-    Mp, Md, Mneg, fitness, tvec, cells, timedrivers = getresults(IP.b, IP.d, IP.μp, IP.μd, IP.μneg, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, timefunction = IP.timefunction, s = IP.s)
+    Mp, Md, Mneg, fitness, tvec, cells, timedrivers = getresults(IP.b, IP.d, IP.μp, IP.μd, IP.μneg, IP.Nmax; ploidy = IP.ploidy, clonalmutations = IP.clonalmutations, timefunction = IP.timefunction, s = IP.s, fitnessfunc = IP.fitnessfunc)
 
     if length(Md) > 0
       AFd = counts(Md)

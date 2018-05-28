@@ -58,13 +58,9 @@ function sampledhist(AF::Array{Float64, 1}, cellnum::Int64; detectionlimit = 0.1
     AF = AF .* cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
     samp_percent = read_depth/cellnum
-    depth = rand(Binomial(cellnum,samp_percent), length(AF))
+    #depth = rand(Binomial(cellnum,samp_percent), length(AF))
+    depth = rand(Poisson(read_depth), length(AF))
     samp_alleles = map((n, p) -> rand(Binomial(n, p)), depth, AF/cellnum)
-    #samp_alleles = zeros(Float64, length(AF))
-
-    #for i in 1:length(samp_alleles)
-    #  samp_alleles[i] = rand(Binomial(depth[i], AF[i]/cellnum))
-    #end
 
     VAF = samp_alleles./depth
 
@@ -77,23 +73,20 @@ function sampledhist(AF::Array{Float64, 1}, cellnum::Int64; detectionlimit = 0.1
 end
 
 function betabinom(p, n, ρ)
-
     μ = p * n
-
     shape1 = (μ / n) * ((1 / ρ) - 1)
     shape2 = n * shape1/μ - shape1
-
-    rand(Binomial(n, rand(Beta(shape1, shape2))))
-
+    return rand(Binomial(n, rand(Beta(shape1, shape2))))
 end
 
-function sampledhist(AF, cellnum, ρ ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
+function sampledhist(AF, cellnum, ρ; detectionlimit = 0.1, ploidy = 2.0, read_depth = 100.0, cellularity = 1.0)
 
     AF = AF./ploidy
     AF = AF .* cellularity
     filter!(x -> x > detectionlimit * cellnum, AF)
     samp_percent = read_depth/cellnum
-    depth = rand(Binomial(cellnum, samp_percent), length(AF))
+    #depth = rand(Binomial(cellnum, samp_percent), length(AF))
+    depth = rand(Poisson(read_depth), length(AF))
     samp_alleles = map((x, y) -> betabinom(x, y, ρ), AF/cellnum, depth)
     VAF = samp_alleles./depth
 
@@ -134,9 +127,7 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
 end
 
 function Mcdf(f,fmin,fmax)
-
     (1.0./f - 1.0/fmax) ./ (1.0/fmin - 1.0/fmax)
-
 end
 
 function rsq(AD, fmin, fmax, metricp)
@@ -167,21 +158,17 @@ function kolmogorovD(AD, fmin, fmax, metricp)
 end
 
 function Draw(DF1, DF2)
-
     maximum(abs(DF1[:cumsum] .- DF2[:cumsum]))
 end
 
 function meanDraw(DF1, DF2)
-
     #mean(abs(DF1[:cumsum] - DF2[:cumsum]))
     sqrt(sum((DF1[:cumsum] .- DF2[:cumsum]).^2))
 end
 
 function kolmogorovDmean(AD, fmin, fmax, metricp)
-
     D = mean(abs.(convert(Array, AD.DF[:theory]) .- convert(Array, AD.DF[:normalized])))
     pval = metricp[:pval][searchsortedlast(metricp[:meanDmetric], D)]
-
     return MetricObj(D, pval)
 end
 
@@ -194,25 +181,20 @@ function trapz{T<:Number}(x::Vector{T}, y::Vector{T})
     r = 0.0
     for i in 2:n
         r += (x[i] .- x[i-1]) .* (y[i] .+ y[i-1])
-
     end
     r / 2.0
 end
 
 function areametric(AD, fmin, fmax, metricp)
-
     area = abs.(trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:normalized])) - trapz(convert(Array, AD.DF[:invf]), convert(Array, AD.DF[:theory])))
     area = area / (1 / fmin - 1 / fmax)
     pval = metricp[:pval][searchsortedlast(metricp[:areametric], area)]
-
     return MetricObj(area, pval)
 end
 
 function areametricraw(AD, DFABC; fmin = 0.12, fmax = 0.8)
-
     area = abs.(trapz(convert(Array, AD.DF[:v]), convert(Array, AD.DF[:cumsum])) - trapz(convert(Array, AD.DF[:v]), convert(Array, DFABC[:cumsum])))
     area = area / (1 / fmin - 1 / fmax)
-
     return area
 end
 
@@ -224,7 +206,7 @@ Simulate a stochastic model of tumour growth with a single subclone introduced a
 ## Arguments
 - `read_depth = 200.0`: Mean read depth of the target data set
 - `detectionlimit = 5/read_depth`: Ability to detect low frequency variants. Assumes 5 reads are needed to call a variant.
-- `μ = 10.0`: Mutation rate per division. At each division a Poisson random variable with mean μ is sampled.
+- `μ = 10.0`: Mutation rate per division per genome (this will timesed by ploidy for the mutation rate per cell). At each division a Poisson random variable with mean μ is sampled.
 - `clonalmutations = 100.0`: Number of clonal mutations present in the first cell.
 - `nclones = 1`: Number of subclones introduced
 - `Nmax = 10^4`: Maximum population size.
@@ -236,7 +218,7 @@ Simulate a stochastic model of tumour growth with a single subclone introduced a
 - `fixedmu = false`: If set to false number of mutations per division is fixed and not sampled from a poisson distribution.
 ...
 """
-function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
     nclones == length(tevent) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(tevent)), these must be the same size ")
@@ -247,7 +229,7 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit 
     read_depth,
     clonalmutations,
     s,
-    μ,
+    μ * ploidy,
     b,
     d,
     tevent,
@@ -275,15 +257,25 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize.
 """
-function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 6.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
     correctnc = false
     IP, simresult = 0, 0
 
     while correctnc == false
-
-      tevent = sort(rand(Uniform(tmin, tmax), nclones))
-      s = rand(Uniform(smin, smax), nclones)
+      freq = rand(Uniform(minclonesize, maxclonesize), nclones)
+      tevent = sort(rand(Uniform(tmin, log(Nmax)/log(2)), nclones))
+      if nclones == 1
+          s1 = selection(log(2), minclonesize, log(Nmax)/log(2), tevent[1])
+          s2 = selection(log(2), maxclonesize, log(Nmax)/log(2), tevent[1])
+          s = rand(Uniform(s1, 3*s2), nclones) #increasing this s2 makes the distribution of clone sizes more uniform
+      elseif nclones == 2
+          s1, s2 = selection2clone(log(2), freq[1], freq[2], log(Nmax)/log(2), tevent[1], tevent[2])
+          sm = maximum([s1, s2])
+          s = rand(Uniform(s1, 3*sm), nclones)
+      else
+          s = rand(Uniform(smin, smax), nclones)
+      end
 
       IP = InputParameters(nclones,
       Nmax,
@@ -309,7 +301,7 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
           correctnc = true
       end
     end
-
+    #println(i)
     #get sampled VAFs
     if IP.ρ > 0.0
         sampleddata = sampledhist(simresult.trueVAF, IP.Nmax, IP.ρ, detectionlimit = IP.detectionlimit, ploidy = IP.ploidy, read_depth = IP.read_depth, cellularity = IP.cellularity)
@@ -325,7 +317,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and specify whether subclones are independent or not (ie nested or not). Only applicable to >1 subclone.
 """
-function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
   ct = 1
   x = 0.0
@@ -343,7 +335,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff apart.
 """
-function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
+function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -366,7 +358,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff and have at least minmutations mutations.
 """
-function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
+function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -453,7 +445,7 @@ function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth =
 end
 
 
-function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1)
+function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
 
     IP = InputParametersM(
     Nmax,
@@ -469,7 +461,8 @@ function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionli
     ρ,
     cellularity,
     s,
-    timefunction)
+    timefunction,
+    fitnessfunc)
 
     #get simulation data
     simresult, IP = run1simulation(IP)

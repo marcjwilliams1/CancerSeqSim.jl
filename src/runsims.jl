@@ -53,7 +53,6 @@ type bdprocess
 end
 
 type SimResult
-
     clonefreq::Array{Float64,1}
     clonefreqp::Array{Float64,1}
     clonetime::Array{Float64,1}
@@ -67,7 +66,6 @@ type SimResult
     Ndivisions::Array{Int64, 1}
     cells::Array{cancercell, 1}
     aveDivisions::Array{Float64, 1}
-
 end
 
 type InputParameters
@@ -90,33 +88,27 @@ type InputParameters
 end
 
 type StemCellSimResult
-
     trueVAF::Array{Float64,1}
     cells::CancerCells
     N::Array{Float64, 1}
     divisions::Array{Float64, 1}
     stemcellfraction::Array{Float64,1}
-
 end
 
 ###############################################################################
 
 function newmutations(cancercell, μ, mutID)
-
     #function to add new mutations to cells based on μ
     numbermutations= 1
     cancercell.mutations = append!(cancercell.mutations, mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
-
     return cancercell, mutID
 end
 
 function newmutationsinit(cancercell, μ, mutID)
-
     numbermutations = 0
     cancercell.mutations = append!(cancercell.mutations,mutID:mutID+numbermutations-1)
     mutID = mutID + numbermutations
-
     return cancercell, mutID
 end
 
@@ -168,7 +160,8 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     #set array of birthrates
     birthrates = [b]
     deathrates = [d]
-    times = vcat(tevent, 0.0)
+    #times = vcat(tevent, 0.0)
+    #time is defined in terms of population doublings
     timesN = round.(Int64, vcat(exp.(log(2).*times[1:end-1]), 0.0))
 
     #depending on number of clones add birthrates to model, fitness is randomly distributed between death and birth rates
@@ -206,7 +199,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
         #pick a random cell
         randcell = rand(1:N)
         r = rand(Uniform(0,Rmax))
-	      Nt = N
+	     Nt = N
 
         #birth event if r<birthrate, access correct birthrate from cells array
         if r < birthrates[cells[randcell].fitness]
@@ -286,12 +279,14 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
         end
 
         if (executed == false) && ((clonefreq.>maxclonefreq) == changemutrate)
+            #if population of all clones is sufficiently large no new mutations
+            #are acquired, can use this approximation as only mutations above 1%
+            # frequency can be reliably detected
             μ = 0
             executed = true
         end
 
     end
-
     return RawOutput(Nvec, tvec, muts, cells, birthrates, deathrates, clonetype, clonetime, subclonemutations, cloneN, Ndivisions, aveDivisions)
 end
 
@@ -311,8 +306,7 @@ function cellsconvert(cells)
 end
 
 function allelefreq(mutations, cellnum)
-    #creat dictionary that maps mutation ID to allele frequency
-
+    #create dictionary that maps mutation ID to allele frequency
     f = counts(mutations,minimum(mutations):maximum(mutations))
     muts = collect(minimum(mutations):maximum(mutations))
     idx = f .> 0.01
@@ -435,7 +429,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     clonefreq = clonefreq[detectableclones]
 
     if sum(detectableclones) != IP.numclones
-
         IP.numclones = sum(detectableclones)
         IP.tevent = IP.tevent[detectableclones]
         IP.selection = IP.selection[detectableclones]
@@ -444,7 +437,6 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
         detectableclones = detectableclones[1:length(br)]
         br = br[detectableclones]
         dr = dr[detectableclones]
-
     end
 
     #return SimResults object
