@@ -229,7 +229,7 @@ function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit 
     read_depth,
     clonalmutations,
     s,
-    μ * ploidy,
+    (μ/2) * ploidy,
     b,
     d,
     tevent,
@@ -284,7 +284,7 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
       read_depth,
       clonalmutations,
       s,
-      μ,
+      (μ/2) * ploidy, #divide by 2 because both daughter cells can accumulate mutations so this ensures the *per division* mutation rate is accurate
       b,
       d,
       tevent,
