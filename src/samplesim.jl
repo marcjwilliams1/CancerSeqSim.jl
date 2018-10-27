@@ -1,49 +1,48 @@
-
 #type definitions
 
-type SampledData
+mutable struct SampledData
     DF::DataFrame
     VAF::Array{Float64,1}
     counts::Array{Int64,1}
     depth::Array{Int64,1}
 end
 
-type AnalysedData
+mutable struct AnalysedData
     DF::DataFrame
     VAF::Array{Float64,1}
 end
 
-type RsqObj
+mutable struct RsqObj
     metric::Float64
     mu::Float64
     pval::Float64
 end
 
-type MetricObj
+mutable struct MetricObj
     metric::Float64
     pval::Float64
 end
 
-type AllMetrics
+mutable struct AllMetrics
     rsq::RsqObj
     area::MetricObj
     Dk::MetricObj
     meanD::MetricObj
 end
 
-type Simulation
+mutable struct Simulation
   input::InputParameters
   output::SimResult
   sampleddata::SampledData
 end
 
-type SimulationM
+mutable struct SimulationM
   input::InputParametersM
   output::SimResultM
   sampleddata::SampledData
 end
 
-type SimulationStemCells
+mutable struct SimulationStemCells
   input::InputParameters
   output::StemCellSimResult
   sampleddata::SampledData
@@ -105,17 +104,17 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
 
     #calculate cumulative sum
     steps = fmax:-0.001:fmin
-    cumsum = Array{Int64}(0)
-    v = Array{Float64}(0)
+    cumsum = Array{Int64}(undef, 0)
+    v = Array{Float64}(undef, 0)
 
     for i in steps
         push!(cumsum, sum(VAF .>= i))
         push!(v, i)
     end
-    cumsum = cumsum - cumsum[1]
+    cumsum = cumsum .- cumsum[1]
 
     DF = DataFrame(cumsum = map(Float64, cumsum), v = v)
-    DF[:invf] = 1 ./ DF[:v] - 1 ./ fmax
+    DF[:invf] = 1 ./ DF[:v] .- 1 ./ fmax
 
     DF[:theory] = Mcdf(DF[:v], fmin, fmax)
     DF[:normalized] = DF[:cumsum] ./ maximum(DF[:cumsum])
@@ -127,7 +126,7 @@ function cumulativedist(sresult; fmin = 0.1, fmax = 0.3)
 end
 
 function Mcdf(f,fmin,fmax)
-    (1.0./f - 1.0/fmax) ./ (1.0/fmin - 1.0/fmax)
+    (1.0./f .- 1.0/fmax) ./ (1.0/fmin .- 1.0/fmax)
 end
 
 function rsq(AD, fmin, fmax, metricp)
@@ -135,7 +134,7 @@ function rsq(AD, fmin, fmax, metricp)
     #fit constrained fit
     lmfit = fit(LinearModel, @formula(cumsum ~ invf + 0), AD.DF)
     #calculate R^2 value
-    rsqval = 1 - (sum(residuals(lmfit) .^ 2) / sum((AD.DF[:cumsum] - 0) .^ 2))
+    rsqval = 1 .- (sum(residuals(lmfit) .^ 2) ./ sum((AD.DF[:cumsum] .- 0) .^ 2))
     #extract coefficient for mutation rate
     mu = coef(lmfit)[1]
     #get pvalue
@@ -148,7 +147,7 @@ function kolmogorovD(AD, fmin, fmax, metricp)
 
     xfiltered = AD.VAF[fmin .< AD.VAF .< fmax]
     n = length(xfiltered)
-    cdfs = 1 - map(x->Mcdf(x, fmin, fmax), sort(xfiltered))
+    cdfs = 1 .- map(x->Mcdf(x, fmin, fmax), sort(xfiltered))
     δp = maximum((1:n) / n - cdfs)
     δn = -minimum((0:n-1) / n - cdfs)
     δ = max(δn, δp)
@@ -172,7 +171,7 @@ function kolmogorovDmean(AD, fmin, fmax, metricp)
     return MetricObj(D, pval)
 end
 
-function trapz{T<:Number}(x::Vector{T}, y::Vector{T})
+function trapz(x::Vector{T}, y::Vector{T}) where T <: Number
     local n = length(x)
     if (length(y) != n)
         error("Vectors 'x', 'y' must be of same length")
@@ -218,7 +217,7 @@ Simulate a stochastic model of tumour growth with a single subclone introduced a
 - `fixedmu = false`: If set to false number of mutations per division is fixed and not sampled from a poisson distribution.
 ...
 """
-function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./ read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime, maxclonefreq = 200)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
     nclones == length(tevent) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(tevent)), these must be the same size ")
@@ -257,7 +256,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize.
 """
-function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 6.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 6.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
     correctnc = false
     IP, simresult = 0, 0
@@ -317,7 +316,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and specify whether subclones are independent or not (ie nested or not). Only applicable to >1 subclone.
 """
-function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
+function simulate(minclonesize, maxclonesize, independentclones::Bool; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = 200)
 
   ct = 1
   x = 0.0
@@ -335,7 +334,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff apart.
 """
-function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
+function simulate(minclonesize, maxclonesize, mindiff::Float64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -358,7 +357,7 @@ end
 
 Return simulation with frequency of subclones >minclones & <maxclonesize and subclone frequency are at least mindiff and have at least minmutations mutations.
 """
-function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
+function simulate(minclonesize, maxclonesize, mindiff::Float64, minmutations::Int64; nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, fixedmu = false, tmin = 3.0, tmax = 20.0, smin = 0.0, smax = 25.0, timefunction::Function = exptime, maxclonefreq = maxclonefreq)
 
   nclones == 2 || error("nclones must be = 2 for this method as it is a function to simulate until we arrive at 2 clones that are greater than mindiff apart")
 
@@ -409,7 +408,7 @@ Simulate a stochastic model of tumour growth with a stem cell architecture. Outp
 - `fixedmu = false`: If set to false number of mutations per division is fixed and not sampled from a poisson distribution.
 ...
 """
-function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth = 100.0, nclones = 0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
+function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth = 100.0, nclones = 0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false, timefunction::Function = exptime)
 
     nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
@@ -445,7 +444,7 @@ function simulatestemcells(;ploidy = 2, α = 0.1, maxdivisions = 5, read_depth =
 end
 
 
-function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
+function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = sfunc, fitnessfunc = nonmultiplicativefitness)
 
     IP = InputParametersM(
     Nmax,
@@ -478,7 +477,7 @@ function simulatedifferentmutations(;ploidy = 2, read_depth = 100.0, detectionli
 end
 
 
-function simulatedifferentmutationsmoran(tmax; ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = 0.1)
+function simulatedifferentmutationsmoran(tmax; ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μp = 10.0, μd = 0.001, μneg = 0.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^4, cellularity = 1.0, timefunction::Function = exptime, s = sfunc, fitnessfunc = nonmultiplicativefitness)
 
     IP = InputParametersM(
     Nmax,
@@ -494,7 +493,8 @@ function simulatedifferentmutationsmoran(tmax; ploidy = 2, read_depth = 100.0, d
     ρ,
     cellularity,
     s,
-    timefunction)
+    timefunction,
+    nonmultiplicativefitness)
 
     #get simulation data
     simresult, IP = run1simulation(IP, tmax)

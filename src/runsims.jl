@@ -1,18 +1,18 @@
-#type definitions
-@compat abstract type Stem end
+#mutable struct definitions
+abstract type Stem end
 
-type CancerStemCell <: Stem
+mutable struct CancerStemCell <: Stem
     mutations::Array{Int64,1}
     fitness::Int64
 end
 
-type CancerNonStemCell <: Stem
+mutable struct CancerNonStemCell <: Stem
     mutations::Array{Int64,1}
     fitness::Int64
     Ndivs::Int64
 end
 
-type CancerCells
+mutable struct CancerCells
   stemcells::Array{CancerStemCell, 1}
   nonstemcells::Array{CancerNonStemCell, 1}
   ncells::Array{Int64, 1}
@@ -20,18 +20,18 @@ type CancerCells
   d::Float64
 end
 
-type RawResults
+mutable struct RawResults
   cells::CancerCells
   Nvec::Array{Float64, 1}
   divisions::Array{Int64, 1}
 end
 
-type cancercell
+mutable struct cancercell
     mutations::Array{Int64,1}
     fitness::Int64
 end
 
-type RawOutput
+mutable struct RawOutput
     Nvec::Array{Int64, 1}
     tvec::Array{Float64, 1}
     muts::Array{Int64, 1}
@@ -46,13 +46,13 @@ type RawOutput
     aveDivisions::Array{Float64, 1}
 end
 
-type bdprocess
+mutable struct bdprocess
   N::Array{Int64, 1}
   t::Array{Float64, 1}
   clonefreq::Array{Float64, 1}
 end
 
-type SimResult
+mutable struct SimResult
     clonefreq::Array{Float64,1}
     clonefreqp::Array{Float64,1}
     clonetime::Array{Float64,1}
@@ -68,7 +68,7 @@ type SimResult
     aveDivisions::Array{Float64, 1}
 end
 
-type InputParameters
+mutable struct InputParameters
     numclones::Int64
     Nmax::Int64
     detectionlimit::Float64
@@ -87,7 +87,7 @@ type InputParameters
     maxclonefreq::Int64
 end
 
-type StemCellSimResult
+mutable struct StemCellSimResult
     trueVAF::Array{Float64,1}
     cells::CancerCells
     N::Array{Float64, 1}
@@ -192,7 +192,7 @@ function tumourgrow_birthdeath(b, d, Nmax, μ; numclones=1, clonalmutations = μ
     clonefreq[1] = 1
 
     executed = false
-    changemutrate = broadcast(!, BitArray(numclones + 1))
+    changemutrate = broadcast(!, BitArray(undef, numclones + 1))
 
     while N < Nmax
 
@@ -337,7 +337,7 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
     AFnew = zeros(Int64, sum(mutations))
 
     for i in 1:length(cmuts)
-      idx = findin(mutids, subclonemutations[i])
+      idx = findall((in)(mutids), subclonemutations[i])
       cmuts[i] = sum(mutations[idx])
     end
 
@@ -414,7 +414,7 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
     #remove clones that have frequency < detectionlimit
 #    detectableclones = (pctfit.>(IP.detectionlimit)) & (pctfit.<0.95)
     if length(pctfit) > 1
-      clonefreq, cmuts = calculateclonefreq(pctfit, cmuts, clonetype - 1)
+      clonefreq, cmuts = calculateclonefreq(pctfit, cmuts, clonetype .- 1)
       !(sum(clonefreq.>1.0) > 0) || error("There is a clone with frequency greater than 1, this should be impossible ($(clonefreq)), $(clonetype), $(pctfit)")
     else
       clonefreq = pctfit
@@ -433,14 +433,14 @@ function run1simulation(IP::InputParameters, minclonesize, maxclonesize)
         IP.tevent = IP.tevent[detectableclones]
         IP.selection = IP.selection[detectableclones]
         clonetype = clonetype[detectableclones]
-        unshift!(detectableclones, true)
+        pushfirst!(detectableclones, true)
         detectableclones = detectableclones[1:length(br)]
         br = br[detectableclones]
         dr = dr[detectableclones]
     end
 
     #return SimResults object
-    return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype - 1, Ndivisions, cells, aveDivisions), IP
+    return SimResult(clonefreq, pctfit, clonetime, cmuts, br, dr, tend, AF, cloneN, clonetype .- 1, Ndivisions, cells, aveDivisions), IP
 end
 
 ###############################################################################

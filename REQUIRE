@@ -4,8 +4,9 @@ Gadfly
 ProgressMeter
 DataFrames
 GLM
-Stats
+StatsBase
 HypothesisTests
 Gadfly
 Colors
 Compose
+Compat

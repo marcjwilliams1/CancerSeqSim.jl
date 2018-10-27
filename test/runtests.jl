@@ -1,8 +1,10 @@
 using CancerSeqSim
 using Distributions
-using Base.Test
+using Test
+using Random
+using Statistics
 
-tests = ["1"]
+tests = ["frequency", "simulation", "diffmutations"]
 
 println("Running tests ...")
 

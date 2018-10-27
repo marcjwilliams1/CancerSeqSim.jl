@@ -1,4 +1,4 @@
-type SimulationSamples
+mutable struct SimulationSamples
   input::InputParameters
   #output::SimResult
   sampleddataDF::DataFrame
@@ -12,7 +12,7 @@ function run1simulationsample(IP::InputParameters, minclonesize, maxclonesize)
   return sresult, IP
 end
 
-function getsamples(;nsample = 1, nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, samplesize = round(Int64, 0.1 * Nmax), s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
+function getsamples(;nsample = 1, nclones = 1, ploidy = 2, read_depth = 100.0, detectionlimit = 5 ./read_depth, clonalmutations = 100.0, μ = 10.0, d = 0.0, b = log(2), ρ = 0.0, Nmax = 10^3, samplesize = round(Int64, 0.1 * Nmax), s = repeat([1.0], inner = nclones), tevent = collect(1.0:0.5:100.0)[1:nclones], cellularity = 1.0, fixedmu = false)
 
   nclones == length(s) || error("Number of clones is $(nclones), size of selection coefficient array is $(length(s)), these must be the same size ")
 
