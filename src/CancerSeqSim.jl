@@ -4,13 +4,15 @@ module CancerSeqSim
 using Distributions
 using DataFrames
 using GLM
-using Stats
 using HypothesisTests
 using Gadfly
 using Colors
 using Compose
 using Compat
 using StatsBase
+using Printf
+using Statistics
+using Random
 
 import Base.show
 

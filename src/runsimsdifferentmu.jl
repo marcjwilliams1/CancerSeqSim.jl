@@ -1,7 +1,7 @@
 #type definitions
-@compat abstract type Stem end
+abstract type Stem end
 
-type cancercellM
+mutable struct cancercellM
     mutationsp::Array{Int64,1}
     mutationsd::Array{Int64,1}
     mutationsneg::Array{Int64,1}
@@ -17,7 +17,7 @@ type cancercellM
     timedrivers::Array{Float64, 1}
 end
 
-type SimResultM
+mutable struct SimResultM
     trueVAF::Array{Float64,1}
     trueVAFp::Array{Float64,1}
     trueVAFd::Array{Float64,1}
@@ -29,7 +29,7 @@ type SimResultM
     cells::Array{cancercellM, 1}
 end
 
-type InputParametersM
+mutable struct InputParametersM
     Nmax::Int64
     detectionlimit::Float64
     ploidy::Int64
@@ -68,17 +68,13 @@ function newmutations(cancercell::cancercellM, mutIDp, mutIDd, mutIDneg, Rmax, t
       push!(cancercell.fitness, stemp)
       push!(cancercell.timedrivers, t)
     end
-    #println(cancercell.fitness)
-    b = fitnessfunc(cancercell, b)
 
     #decrease fitness due to driver mutations
     for i in 1:numbermutationsneg
-      #push!(cancercell.fitnessneg, -rand(Exponential(0.01)))
-      push!(cancercell.fitness, -s)
+      push!(cancercell.fitnessneg, -s())
     end
-    for i in cancercell.fitnessneg
-      b = b * (1 + i)
-    end
+
+    b = fitnessfunc(cancercell, b)
 
     cancercell.b = b
 
@@ -94,6 +90,9 @@ end
 
 function multiplicativefitness(cancercell, b)
   for i in cancercell.fitness
+    b = b * (1 + i)
+  end
+  for i in cancercell.fitnessneg
     b = b * (1 + i)
   end
   return b
@@ -129,8 +128,6 @@ function initializesim(mup, mud, muneg, b, d)
     return t, tvec, N, Nvec, cells, mutIDp, mutIDd, mutIDneg
 end
 
-
-
 function initializesim(mup, mud, muneg, b, d, Ncells)
 
     #initialize time to zero
@@ -158,7 +155,7 @@ function initializesim(mup, mud, muneg, b, d, Ncells)
     return t, tvec, N, Nvec, cells, mutIDp, mutIDd, mutIDneg
 end
 
-function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, timefunction::Function = exptime, s = 0.1)
+function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, timefunction::Function = exptime, s = sfunc, fitnessfunc = nonmultiplicativefitness)
 
     t, tvec, N, Nvec, cells, mutIDp, mutIDd, mutIDneg = initializesim(μp, μd, μneg, b, d, Nmax)
     Rmax = b
@@ -168,8 +165,8 @@ function tumourmoran(b, d, Nmax, μp, μd, μneg, maxt; clonalmutations = μp, t
       celldie = rand(1:Nmax)
       cellbirth = sample(1:Nmax, weights(wts))
       cells[celldie] = copycell(cells[cellbirth])
-      cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
-      cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax, t, s)
+      cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[cellbirth], mutIDp, mutIDd, mutIDneg, Rmax, t, s, nonmultiplicativefitness)
+      cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax = newmutations(cells[celldie], mutIDp, mutIDd, mutIDneg, Rmax, t, s, nonmultiplicativefitness)
       Δt =  1/(Nmax) * timefunction()
       t = Δt + t
       push!(tvec, t)
@@ -197,7 +194,9 @@ function copycell(cancercellold::cancercellM)
   copy(cancercellold.timedrivers))
 end
 
-function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μp, timefunction::Function = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
+sfunc() = 0.0
+
+function tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = μp, timefunction::Function = exptime, s = sfunc, fitnessfunc = nonmultiplicativefitness)
 
     #Rmax starts with b + d and changes once a fitter mutant is introduced, this ensures that
     # b and d have correct units
@@ -286,7 +285,7 @@ function cellsconvert(cells::Array{cancercellM, 1})
     return mutationsp, mutationsd, mutationsneg, fitnessb, sort(unique(drivertime))
 end
 
-function getresults(b, d, μp, μd, μneg, Nmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = 0.1, fitnessfunc = nonmultiplicativefitness)
+function getresults(b, d, μp, μd, μneg, Nmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = sfunc, fitnessfunc = nonmultiplicativefitness)
 
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
     cells, tvec, Rmax = tumourgrow_birthdeath(b, d, Nmax, μp, μd, μneg; clonalmutations = 0, timefunction = timefunction, s = s, fitnessfunc = fitnessfunc);
@@ -295,8 +294,7 @@ function getresults(b, d, μp, μd, μneg, Nmax; ploidy = 2, clonalmutations = 1
     return Mp, Md, Mneg, fitness, tvec, cells, timedrivers
 end
 
-function getresults(b, d, μp, μd, μneg, Nmax, tmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = 0.1)
-
+function getresults(b, d, μp, μd, μneg, Nmax, tmax; ploidy = 2, clonalmutations = 100, timefunction = exptime, s = sfunc)
     #Nvec,tvec,mvec,cells,br,dr,ct,clonetime
     cells, tvec, Rmax = tumourmoran(b, d, Nmax, μp, μd, μneg, tmax; clonalmutations = 0, timefunction = timefunction, s = s);
     Mp, Md, Mneg, fitness, timedrivers = cellsconvert(cells)
