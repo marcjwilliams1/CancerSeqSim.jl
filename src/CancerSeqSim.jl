@@ -13,6 +13,7 @@ using StatsBase
 using Printf
 using Statistics
 using Random
+using RecipesBase
 
 import Base.show
 
@@ -56,6 +57,7 @@ include("runsimsdifferentmu.jl")
 include("samplesim.jl")
 include("util.jl")
 include("multiplesamples.jl")
+include("plots.jl")
 
 
 end

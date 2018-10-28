@@ -262,7 +262,7 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
     IP, simresult = 0, 0
 
     while correctnc == false
-      freq = rand(Uniform(minclonesize, maxclonesize), nclones)
+      freq = sort(rand(Uniform(minclonesize, maxclonesize), nclones), rev = true)
       tevent = sort(rand(Uniform(tmin, log(Nmax)/log(2)), nclones))
       if nclones == 1
           s1 = selection(log(2), minclonesize, log(Nmax)/log(2), tevent[1])
@@ -271,7 +271,7 @@ function simulate(minclonesize, maxclonesize; nclones = 1, ploidy = 2, read_dept
       elseif nclones == 2
           s1, s2 = selection2clone(log(2), freq[1], freq[2], log(Nmax)/log(2), tevent[1], tevent[2])
           sm = maximum([s1, s2])
-          s = rand(Uniform(s1, 3*sm), nclones)
+          s = rand(Uniform(s1[1], 3*sm[1]), nclones)
       else
           s = rand(Uniform(smin, smax), nclones)
       end
