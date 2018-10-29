@@ -5,17 +5,21 @@
 [![codecov.io](http://codecov.io/github/marcjwilliams1/CancerSeqSim.jl/coverage.svg?branch=master)](http://codecov.io/github/marcjwilliams1/CancerSeqSim.jl?branch=master)
 
 
-Simulate tumour VAFs with different clonal structures. Package is written in the [Julia](https://julialang.org/) programming language
+Simulate tumour VAFs with different clonal structures. Package is written in the [Julia](https://julialang.org/) programming language.
+
+Package hosts code related to the simulation framework used in the following publications:
+[Quantification of subclonal selection in cancer from bulk sequencing data](https://www.nature.com/articles/s41588-018-0128-6)
+[Identification of neutral tumor evolution across cancer types](https://www.nature.com/articles/ng.3489)
 
 ## Getting Started
 To download the package, once you're in a Julia session type the following command:
 ```julia
 using Pkg
-Pkg.add("https://github.com/marcjwilliams1/CancerSeqSim.jl")
+Pkg.add("CancerSeqSim.jl")
 ```
 
 ## Example
-To simulate a tumour and generate synthetic sequencing data simply invoke the `simulate` command. There are many arguments that can be changed, to see all optional arguments type `?simulate` in a julia session. The command below will simulate a tumour with a single subclone with frequency between 0.4 and 0.6, mutation rate = 10 and 200 clonalmutations.
+To simulate a tumour and generate synthetic sequencing data simply invoke the `simulate` command. There are many arguments that can be changed, for example it is possible to change the mutation rate or the number of subclones introduced into the population. To see all the optional arguments you can type `?simulate` in a julia session. The command below will simulate a tumour with a single subclone with frequency between 0.4 and 0.6, mutation rate = 10 and 200 clonalmutations.
 ```julia
 simdata = simulate(0.4, 0.6, μ = 10.0, clonalmutations = 200)
 ```
@@ -27,7 +31,7 @@ Pkg.add("Plots.jl")
 using Plots
 ```
 
-Then using the `plot` function on a simulation object will generate the histogram.
+Then using the `plot` function on a simulation object will generate the histogram, the red line shows the frequency of the subclone.
 ```julia
 plot(simdata)
 ```
