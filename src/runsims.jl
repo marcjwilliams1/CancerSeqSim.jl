@@ -356,7 +356,7 @@ function allelefreqexpand(AFDict, μ, subclonemutations; fixedmu = false)
     cmuts = zeros(Int64, length(subclonemutations))
 
     for i in 1:length(cmuts)
-      idx = findin(mutids, subclonemutations[i])
+      idx = findall((in)(mutids), subclonemutations[i])
       cmuts[i] = sum(mutations[idx])
     end
 
