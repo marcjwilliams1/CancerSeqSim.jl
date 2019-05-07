@@ -15,7 +15,7 @@ Package hosts code related to the simulation framework used in the following pub
 To download the package, once you're in a Julia session type the following command:
 ```julia
 using Pkg
-Pkg.add("CancerSeqSim.jl")
+Pkg.add("CancerSeqSim")
 ```
 
 ## Example
